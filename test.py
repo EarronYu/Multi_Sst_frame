@@ -1,0 +1,12 @@
+import pandas as pd
+pd.set_option('display.max_columns', None)
+ETHUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='a')
+ETHUSDT_df = pd.DataFrame(ETHUSDT_df)
+ETHUSDT_df.drop(ETHUSDT_df.index)
+ETHUSDT_df.to_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='w')
+DOGEUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='DOGEUSDT', mode='a')
+DOGEUSDT_df = pd.DataFrame(DOGEUSDT_df)
+DOGEUSDT_df.drop(DOGEUSDT_df.index)
+ETHUSDT_df.to_hdf('data//Raishiz_15m_4h_indicator.h5', key='DOGEUSDT', mode='w')
+print(ETHUSDT_df)
+print(DOGEUSDT_df)

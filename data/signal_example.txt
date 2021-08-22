@@ -1,0 +1,4 @@
+# tradingview signal type
+{"key":"insert_key_here", "strategy": "insert_strategy_here", "symbol":"insert_symbol_here", "time_period":"insert_time_period_here", "signal_type":"insert_signal_type_here"}
+
+- Vision_algorithmic_indicator
