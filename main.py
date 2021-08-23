@@ -36,7 +36,6 @@ def get_token():
 def processing_signal(strategy, symbol, time_period, signal_type):
     check_signal(strategy, symbol, time_period)
     update_allocation_statistics(strategy, symbol, time_period)
-    exit()
     processing_trading_action(strategy, symbol, time_period, signal_type)
 
 

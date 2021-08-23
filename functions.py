@@ -473,13 +473,22 @@ def processing_record(strategy, symbol, time_period):
     record = pd.DataFrame(record)
     df = record.query(f"'strategy'=='{strategy}' and 'symbol'=={symbol} and 'time_period'=={time_period}")
     df.set_index(df['order_time'])
-    n_record = df.loc[df.index[-1]]
-    o_record = df.loc[df.index[-2]]
-    n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
-    o_funds = Decimal(o_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
-    pnl = n_funds - o_funds
-    trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-    trade_info = pd.DataFrame(trade_info)
-    trade_info.loc[f'{time_period}', 'allocated_funds'] += pnl
-    trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-
+    if len(df.index) >= 2:
+        n_record = df.loc[df.index[-1]]
+        o_record = df.loc[df.index[-2]]
+        n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
+        o_funds = Decimal(o_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
+        pnl = n_funds - o_funds
+        trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+        trade_info = pd.DataFrame(trade_info)
+        trade_info.loc[f'{time_period}', 'allocated_funds'] += pnl
+        trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+    else:
+        n_record = df.loc[df.index[-1]]
+        n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
+        trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+        trade_info = pd.DataFrame(trade_info)
+        o_funds = trade_info.loc[f'{time_period}', 'allocated_funds']
+        funds = (o_funds - n_funds) + n_funds * Decimal('0.9996')
+        trade_info.loc[f'{time_period}', 'allocated_funds'] *= modify_decimal(funds)
+        trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
