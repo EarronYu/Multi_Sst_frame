@@ -103,12 +103,10 @@ def check_signal(strategy, symbol, time_period):
             data['strategy_list'].append(strategy)
             if '' in data['strategy_list']:
                 data['strategy_list'].remove('')
-            yaml.dump(data, f)
         if symbol not in data[f'{strategy}_symbol_list']:
             data[f'{strategy}_symbol_list'].append(symbol)
             if '' in data[f'{strategy}_symbol_list']:
                 data[f'{strategy}_symbol_list'].remove('')
-            yaml.dump(data, f)
         if time_period not in data[f'{strategy}_{symbol}_time_period_list']:
             data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
             if '' in data[f'{strategy}_{symbol}_time_period_list']:
@@ -116,12 +114,12 @@ def check_signal(strategy, symbol, time_period):
             data[f'{strategy}_{symbol}_{time_period}_reduce_rate'] = default_reduce_rate
             if '' in data[f'{strategy}_{symbol}_{time_period}_reduce_rate']:
                 data[f'{strategy}_{symbol}_{time_period}_reduce_rate'].remove('')
-            yaml.dump(data, f)
             df = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             df = pd.DataFrame(df)
             df = df.append(info)
             df = df[~df.index.duplicated(keep='first')]
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+        yaml.dump(data, f)
         f.close()
 
 
@@ -384,14 +382,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
-    elif signal_type == 'reduce_SHORT':
+    if signal_type == 'reduce_SHORT':
         quantity = df.loc[time_period, 'period_SHORT_position']
         symbol, signal_type, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         symbol, quantity = modify_order_quantity(symbol, quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
-    elif signal_type == 'open_LONG':
+    if signal_type == 'open_LONG':
         reduce_quantity = df.loc[time_period, 'period_SHORT_position']
         symbol, signal_type, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
         symbol, quantity = modify_order_quantity(symbol, reduce_quantity)
