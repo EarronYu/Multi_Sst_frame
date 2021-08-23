@@ -79,8 +79,10 @@ def load_config(strategy, symbol, time_period):
         #             exec(f'{S}_{s}_{t}_reduce_rate = {specific_reduce_rate}')
     else:
         _list = ['strategy_list', f'{strategy}_symbol_list', f'{strategy}_{symbol}_time_period_list', f'{strategy}_{symbol}_{time_period}_reduce_rate']
-        data[''.join([x for x in _list if x not in data.keys()])] = ['']
         with open(yaml_path, 'w') as f:
+            for x in _list:
+                if x not in data.keys():
+                    data[x] = ['']
             yaml.dump(data, f)
             f.close()
 
