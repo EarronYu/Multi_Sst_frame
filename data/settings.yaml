@@ -6,12 +6,6 @@ BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
-Raishiz_15m_4h_indicator_ETHUSDT_30m_reduce_rate:
-- 0.3
-Raishiz_15m_4h_indicator_ETHUSDT_time_period_list:
-- 30m
-Raishiz_15m_4h_indicator_symbol_list:
-- ETHUSDT
 TESTNET_BINANCE_CONFIG:
   apiKey: 55b71bb2a26bcbba05f5e9a572c05279bd622b55f74fea9de6477426b90e0cfb
   enableRateLimit: false
@@ -36,8 +30,6 @@ binance_order_types:
 default_reduce_rate:
 - 0.3
 pin: 23Dot140692632779!
-strategy_list:
-- Raishiz_15m_4h_indicator
 test_info:
   account_balance:
   - '0.000'

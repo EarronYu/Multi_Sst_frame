@@ -368,7 +368,7 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
     if signal_type == 'close_position':
         reduce_quantity = trading_info.loc[time_period, 'period_SHORT_position'] + trading_info.loc[time_period, 'period_LONG_position']
         quantity = Decimal(reduce_quantity)
-    return symbol, signal_type, quantity, trading_info
+    return symbol, quantity, trading_info
 
 
 def processing_trading_action(strategy, symbol, time_period, signal_type):
@@ -406,7 +406,7 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         processing_record(strategy, symbol, time_period)
     elif signal_type == 'open_SHORT':
         reduce_quantity = df.loc[time_period, 'period_LONG_position']
-        symbol, signal_type, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
+        symbol, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
         quantity = modify_order_quantity(symbol, reduce_quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
