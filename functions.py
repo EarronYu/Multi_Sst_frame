@@ -101,14 +101,17 @@ def check_signal(strategy, symbol, time_period):
     with open(yaml_path, 'w') as f:
         if strategy not in data['strategy_list']:
             data['strategy_list'].append(strategy)
+            data['strategy_list'] = list(set(data['strategy_list']))
             if '' in data['strategy_list']:
                 data['strategy_list'].remove('')
         if symbol not in data[f'{strategy}_symbol_list']:
             data[f'{strategy}_symbol_list'].append(symbol)
+            data[f'{strategy}_symbol_list'] = list(set(data[f'{strategy}_symbol_list']))
             if '' in data[f'{strategy}_symbol_list']:
                 data[f'{strategy}_symbol_list'].remove('')
         if time_period not in data[f'{strategy}_{symbol}_time_period_list']:
             data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
+            data[f'{strategy}_{symbol}_time_period_list'] = list(set(data[f'{strategy}_{symbol}_time_period_list']))
             if '' in data[f'{strategy}_{symbol}_time_period_list']:
                 data[f'{strategy}_{symbol}_time_period_list'].remove('')
             data[f'{strategy}_{symbol}_{time_period}_reduce_rate'] = default_reduce_rate
@@ -344,28 +347,27 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
     """
     根据订单类型来来得出开仓量, 和更新数据库文件中的对应记录持仓量
     """
-    if signal_type in ['reduce_SHORT']:
+    if signal_type == 'reduce_SHORT':
         # 计算出减仓量
-        reduce_rate = eval(f'{strategy}_{symbol}_{time_period}_reduce_rate_list')
+        reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate_list']
         reduce_quantity = Decimal(reduce_rate * quantity)
         quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
         trading_info.loc[time_period, 'period_SHORT_position'] = quantity
-    elif signal_type in ['reduce_LONG']:
+    if signal_type == 'reduce_LONG':
         # 计算出减仓量
-        reduce_rate = eval(f'{strategy}_{symbol}_{time_period}_reduce_rate_list')
+        reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate_list']
         reduce_quantity = Decimal(reduce_rate * quantity)
         quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
         trading_info.loc[time_period, 'period_LONG_position'] = quantity
-    elif signal_type in ['open_LONG']:
-        # 正常开仓保持原开仓量
-        # 在数据库文件里编辑
+    if signal_type == 'open_LONG':
         trading_info.loc[time_period, 'period_LONG_position'] = quantity
-    elif signal_type in ['open_SHORT']:
-        # 正常开仓保持原开仓量
-        # 在数据库文件里编辑
-        trading_info.loc[time_period, 'period_LONG_position'] = quantity
+    if signal_type == 'open_SHORT':
+        trading_info.loc[time_period, 'period_SHORT_position'] = quantity
+    if signal_type == 'close_position':
+        reduce_quantity = trading_info.loc[time_period, 'period_SHORT_position'] + trading_info.loc[time_period, 'period_LONG_position']
+        quantity = Decimal(reduce_quantity)
     return symbol, signal_type, quantity, trading_info
 
 
@@ -378,21 +380,21 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
     if signal_type == 'reduce_LONG':
         quantity = df.loc[time_period, 'period_LONG_position']
         symbol, signal_type, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
-        symbol, quantity = modify_order_quantity(symbol, quantity)
+        quantity = modify_order_quantity(symbol, quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
     if signal_type == 'reduce_SHORT':
         quantity = df.loc[time_period, 'period_SHORT_position']
         symbol, signal_type, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
-        symbol, quantity = modify_order_quantity(symbol, quantity)
+        quantity = modify_order_quantity(symbol, quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
     if signal_type == 'open_LONG':
         reduce_quantity = df.loc[time_period, 'period_SHORT_position']
         symbol, signal_type, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
-        symbol, quantity = modify_order_quantity(symbol, reduce_quantity)
+        quantity = modify_order_quantity(symbol, reduce_quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
@@ -405,7 +407,7 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
     elif signal_type == 'open_SHORT':
         reduce_quantity = df.loc[time_period, 'period_LONG_position']
         symbol, signal_type, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
-        symbol, quantity = modify_order_quantity(symbol, reduce_quantity)
+        quantity = modify_order_quantity(symbol, reduce_quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
