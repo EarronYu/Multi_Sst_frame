@@ -172,9 +172,13 @@ def modify_decimal(n):
 
 
 def get_latest_balance():
-    with open("data//response.json", mode='r') as response:
-        response = json.load(response)
-        account_info = response
+    # with open("data//response.json", mode='r') as response:
+    #     response = json.load(response)
+    #     account_info = response
+    response = exchange.fapiPrivateGetAccount()
+    response = json.load(response)
+    account_info = response
+
     # 获取账户当前总资金
     assets_df = pd.DataFrame(account_info['assets'], dtype=float)
     assets_df = assets_df.set_index('asset')
@@ -322,13 +326,10 @@ def update_allocation_statistics(strategy, symbol, time_period):
     """
     # ====调用接口====
     # exchange.fapiPrivateGetAccount()
-    with open("data//response.json", mode='r') as response:
-        response = json.load(response)
-        account_info = response
-    # 获取账户当前总资金
-    assets_df = pd.DataFrame(account_info['assets'], dtype=float)
-    assets_df = assets_df.set_index('asset')
-    latest_balance = modify_decimal(assets_df.loc['USDT', 'marginBalance'])  # 保证金余额
+    # with open("data//response.json", mode='r') as response:
+    #     response = json.load(response)
+    #     account_info = response
+    latest_balance = get_latest_balance()
     # ====更新离线数据====
     df = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
     df = pd.DataFrame(df)
@@ -379,26 +380,29 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
     trading_info = pd.DataFrame(df)
     if signal_type == 'reduce_LONG':
         quantity = df.loc[time_period, 'period_LONG_position']
-        symbol, signal_type, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        symbol, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         quantity = modify_order_quantity(symbol, quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
     if signal_type == 'reduce_SHORT':
         quantity = df.loc[time_period, 'period_SHORT_position']
-        symbol, signal_type, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        symbol, quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         quantity = modify_order_quantity(symbol, quantity)
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
     if signal_type == 'open_LONG':
         reduce_quantity = df.loc[time_period, 'period_SHORT_position']
-        symbol, signal_type, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
-        quantity = modify_order_quantity(symbol, reduce_quantity)
-        order = post_order(symbol, signal_type, quantity)
-        trading_record(order, strategy, symbol, time_period, signal_type)
-        processing_record(strategy, symbol, time_period)
-        latest_price = Decimal(exchange.fapiPublicGetTickerPrice({"symbol": "ETHUSDT"})['price'])
+        if reduce_quantity == '0.000':
+            pass
+        else:
+            symbol, quantity, trading_info = position_management('close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
+            quantity = modify_order_quantity(symbol, reduce_quantity)
+            order = post_order(symbol, signal_type, quantity)
+            trading_record(order, strategy, symbol, time_period, signal_type)
+            processing_record(strategy, symbol, time_period)
+        latest_price = Decimal(exchange.fapiPublicGetTickerPrice({"symbol": f"{symbol}"})['price'])
         allocated_funds = Decimal(df.loc[time_period, 'period_allocated_funds'])
         quantity = allocated_funds / latest_price
         order = post_order(symbol, signal_type, quantity)
@@ -406,12 +410,15 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         processing_record(strategy, symbol, time_period)
     elif signal_type == 'open_SHORT':
         reduce_quantity = df.loc[time_period, 'period_LONG_position']
-        symbol, quantity, trading_info = position_management(signal_type == 'close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
-        quantity = modify_order_quantity(symbol, reduce_quantity)
-        order = post_order(symbol, signal_type, quantity)
-        trading_record(order, strategy, symbol, time_period, signal_type)
-        processing_record(strategy, symbol, time_period)
-        latest_price = Decimal(exchange.fapiPublicGetTickerPrice({"symbol": "ETHUSDT"})['price'])
+        if reduce_quantity == '0.000':
+            pass
+        else:
+            symbol, quantity, trading_info = position_management('close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
+            quantity = modify_order_quantity(symbol, reduce_quantity)
+            order = post_order(symbol, signal_type, quantity)
+            trading_record(order, strategy, symbol, time_period, signal_type)
+            processing_record(strategy, symbol, time_period)
+        latest_price = Decimal(exchange.fapiPublicGetTickerPrice({"symbol": f"{symbol}"})['price'])
         allocated_funds = Decimal(df.loc[time_period, 'period_allocated_funds'])
         quantity = allocated_funds / latest_price
         order = post_order(symbol, signal_type, quantity)
