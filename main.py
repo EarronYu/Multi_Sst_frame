@@ -9,6 +9,7 @@ import ast
 import hashlib
 
 
+L = 0
 # 建立flask app
 app = Flask(__name__)
 
@@ -44,6 +45,7 @@ def webhook():
     """
     建立出来一个叫做webhook的位置, 专门接收post信息并分拣到不同symbol以及不同time_period
     """
+    global L
     if request.method == 'POST':
         # Parse the string data from tradingview into a python dict
         data = parse_webhook(request.get_data(as_text=True))  # 将接收到的信息交给action中的parse_webhook函数处理, return给data
@@ -57,21 +59,21 @@ def webhook():
             signal_type = data["signal_type"]
             if 'remove' in (strategy + symbol + time_period):
                 msg = f'Removing {strategy} {symbol} {time_period}'
-                L = len(msg)
+                L = 110
                 print('>' * 5 + '=' * L + '<' * 5)
                 print(msg.center(L + 10))
                 print('Processing...'.center(L + 10))
                 remove(strategy, symbol, time_period)
                 print('Completed!'.center(L + 10))
             else:
-                msg = f'Received Trading Information: {strategy} {symbol} {time_period} {signal_type} Signal'
-                L = len(msg)
-                print('>' * 5 + '=' * L + '<' * 5)
-                print(msg.center(L + 10))
-                print('Processing...'.center(L + 10))
+                msg = f'Received Trading Information: {strategy} {symbol} {time_period}m {signal_type} Signal'
+                L = 110
+                print('>' * 5 + '=' * (L-10) + '<' * 5)
+                print(msg.center(L))
+                print('Processing...'.center(L))
                 processing_signal(strategy, symbol, time_period, signal_type)
-                print('Completed!'.center(L + 10))
-                print('>' * 5 + '=' * L + '<' * 5)
+                print('Completed!'.center(L))
+                print('>' * 5 + '=' * (L-10) + '<' * 5)
             return 200
         else:
             abort(403)

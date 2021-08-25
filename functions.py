@@ -1,11 +1,11 @@
 import pandas as pd
+from datetime import datetime
 from decimal import Decimal
 import ccxt
 import yaml
 import json
 import time
 import h5py
-
 
 pd.set_option('display.max_rows', 1000)
 pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
@@ -30,6 +30,7 @@ test_info = data['test_info']
 binance_order_types = data['binance_order_types']
 TESTNET_BINANCE_CONFIG = data['TESTNET_BINANCE_CONFIG']
 exchange = ccxt.binance(TESTNET_BINANCE_CONFIG)
+exchange.set_sandbox_mode(True)
 # 变量
 strategy_list = ['']
 strategy_symbol_list = ['']
@@ -121,6 +122,7 @@ def check_signal(strategy, symbol, time_period):
             df = pd.DataFrame(df)
             df = df.append(info)
             df = df[~df.index.duplicated(keep='first')]
+            df = df.astype(str)
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
         yaml.dump(data, f)
         f.close()
@@ -144,7 +146,7 @@ def usdt_future_exchange_info(symbol):
     df = pd.DataFrame(exchange_info['symbols'])
     df = df[['symbol', 'pricePrecision', 'quantityPrecision']]
     df.set_index('symbol', inplace=True)
-    price_precision = int(df.at[symbol, 'pricePrecision'])
+    price_precision = df.at[symbol, 'pricePrecision']
     quantity_precision = df.at[symbol, 'quantityPrecision']
     # symbol_temp[symbol]['最小下单量精度'] = None if p == 0 else int(p)
     return price_precision, quantity_precision
@@ -176,11 +178,10 @@ def get_latest_balance():
     #     response = json.load(response)
     #     account_info = response
     response = exchange.fapiPrivateGetAccount()
-    response = json.load(response)
     account_info = response
 
     # 获取账户当前总资金
-    assets_df = pd.DataFrame(account_info['assets'], dtype=float)
+    assets_df = pd.DataFrame(account_info['assets'])
     assets_df = assets_df.set_index('asset')
     latest_balance = modify_decimal(assets_df.loc['USDT', 'marginBalance'])  # 保证金余额
     return latest_balance
@@ -209,11 +210,13 @@ def join(strategy, symbol, time_period):
                     pass
                 else:
                     df.loc[t, 'period_allocated_ratio'] *= modify_decimal((L - 1) / L)
+            df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
     df = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     df = pd.DataFrame(df)
     df.loc[time_period, 'initialize'] = 'none'
     df.loc[time_period, 'period_allocated_ratio'] = modify_decimal(1 / L)
+    df = df.astype(str)
     df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     # 编辑好各symbol各period_allocated
 
@@ -229,6 +232,7 @@ def sync(latest_balance):
             for t in data[f'{S}_{s}_time_period_list']:
                 period_allocated_ratio = modify_decimal(df.loc[t, 'period_allocated_ratio'])
                 df.loc[t, 'period_allocated_funds'] = modify_decimal(latest_balance * period_allocated_ratio)
+            df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
 
 
@@ -249,6 +253,7 @@ def cal_allocated_ratio():
                 funds = modify_decimal(funds)
                 symbol_allocated_funds += funds
             strategy_allocated_funds += symbol_allocated_funds
+            df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
         account_balance += strategy_allocated_funds
     for S in data['strategy_list']:
@@ -261,6 +266,7 @@ def cal_allocated_ratio():
                 period_allocated_funds = df.loc[t, 'period_allocated_funds']
                 period_allocated_funds = modify_decimal(period_allocated_funds)
                 df.loc[t, 'period_allocated_ratio'] = modify_decimal(period_allocated_funds / account_balance)
+            df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
 
 
@@ -293,6 +299,7 @@ def remove(strategy, symbol, time_period):
             df = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             df = pd.DataFrame(df)
             del df[f'{time_period}']
+            df = df.astype(str)
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     with open(yaml_path, 'r') as f:
         global data
@@ -314,6 +321,7 @@ def remove(strategy, symbol, time_period):
             df = pd.DataFrame(df)
             for t in data[f'{S}_{s}_time_period_list']:
                 df.loc[t, 'period_allocated_ratio'] *= modify_decimal(1 / par)
+            df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
     latest_balance = get_latest_balance()
     sync(latest_balance)
@@ -350,14 +358,14 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
     """
     if signal_type == 'reduce_SHORT':
         # 计算出减仓量
-        reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate_list']
+        reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
         reduce_quantity = Decimal(reduce_rate * quantity)
         quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
         trading_info.loc[time_period, 'period_SHORT_position'] = quantity
     if signal_type == 'reduce_LONG':
         # 计算出减仓量
-        reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate_list']
+        reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
         reduce_quantity = Decimal(reduce_rate * quantity)
         quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
@@ -397,7 +405,7 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         if reduce_quantity == '0.000':
             pass
         else:
-            symbol, quantity, trading_info = position_management('close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
+            symbol, reduce_quantity, trading_info = position_management('close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
             quantity = modify_order_quantity(symbol, reduce_quantity)
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
@@ -408,12 +416,12 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         order = post_order(symbol, signal_type, quantity)
         trading_record(order, strategy, symbol, time_period, signal_type)
         processing_record(strategy, symbol, time_period)
-    elif signal_type == 'open_SHORT':
+    if signal_type == 'open_SHORT':
         reduce_quantity = df.loc[time_period, 'period_LONG_position']
         if reduce_quantity == '0.000':
             pass
         else:
-            symbol, quantity, trading_info = position_management('close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
+            symbol, reduce_quantity, trading_info = position_management('close_position', strategy, symbol, time_period, reduce_quantity, trading_info)
             quantity = modify_order_quantity(symbol, reduce_quantity)
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
@@ -437,14 +445,39 @@ def post_order(symbol, signal_type, quantity):
             'positionSide': binance_order_types[signal_type]['positionSide'],
             'quantity': modify_order_quantity(symbol, quantity),
             'type': 'MARKET',
-            'timeInForce': 'GTC',
+            'newOrderRespType': 'RESULT',
             'timestamp': int(time.time() * 1000)
         }
-    order = json.dumps(order, separators=(',', ':'))
-    order = order
-    order = ccxt.binance.fapiPrivatePostOrder(order)
-    print('\nOrder_Info\n', order)
+    order['quantity'] = str(order['quantity'])
+    order = exchange.fapiPrivatePostOrder(order)
+    status = order['status']
+    orderId = order['orderId']
+    avgPrice = order['avgPrice']
+    executedQty = order['executedQty']
+    rec01 = f'{status} Order : # {orderId} #'
+    rec02 = f'Executed Quantity {executedQty} at {avgPrice}'
+    print('Order_Info'.center(110))
+    print(f'{rec01}'.center(110))
+    print(f' {rec02}'.center(110))
+    print(order)
     return order
+
+
+def intTodatetime(intValue):
+    intValue = int(intValue)
+    if len(str(intValue)) == 10:
+        # 精确到秒
+        timeValue = time.localtime(intValue)
+        tempDate = time.strftime("%Y-%m-%d %H:%M:%S", timeValue)
+        datetimeValue = datetime.strptime(tempDate, "%Y-%m-%d %H:%M:%S")
+    elif 10 < len(str(intValue)) < 15:
+        # 精确到毫秒
+        k = len(str(intValue)) - 10
+        timestamp = datetime.fromtimestamp(intValue / (1 * 10 ** k))
+        datetimeValue = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")
+    else:
+        return -1
+    return datetimeValue
 
 
 def trading_record(order, strategy, symbol, time_period, signal_type):
@@ -455,10 +488,9 @@ def trading_record(order, strategy, symbol, time_period, signal_type):
     price = order['avgPrice']
     order_time = order['updateTime']
     side = order['side']
-    order_time = time.localtime(order_time)
-    order_time = time.strftime('%Y-%m-%d %H:%M:%S.%f', order_time)
-    record = pd.read_csv('data//trading_record.csv')
-    record = pd.DataFrame(record)
+    order_time = intTodatetime(order_time)
+    # record = pd.read_csv('data//trading_record.csv')
+    # record = pd.DataFrame(record)
     df = \
         {
             'order_time': [f'{order_time}'],
@@ -469,9 +501,11 @@ def trading_record(order, strategy, symbol, time_period, signal_type):
             'Price': [f'{price}'],
             'quantity': [f'{quantity}']
         }
-    record.append(df)
-    record.set_index(df['order_time'])
-    record.to_csv('data//trading_record.csv')
+    df = pd.DataFrame(df).astype(str)
+    df.set_index('order_time', inplace=True)
+    df.index = pd.DatetimeIndex(df.index)
+    # record.append(df)
+    df.to_csv('data//trading_record.csv')
 
 
 def processing_record(strategy, symbol, time_period):
@@ -479,8 +513,9 @@ def processing_record(strategy, symbol, time_period):
     通过record来计算PNL和allocated_funds
     """
     record = pd.read_csv('data//trading_record.csv')
-    record = pd.DataFrame(record)
-    df = record.query(f"'strategy'=='{strategy}' and 'symbol'=={symbol} and 'time_period'=={time_period}")
+    df = pd.DataFrame(record).astype(str)
+    # df = record.query(f"'strategy'=='{strategy}' and 'symbol'=='{symbol}' and 'time_period'=='{time_period}'")
+    df = record[(df[u'strategy'] == f'{strategy}') & (df[u'symbol'] == f'{symbol}') & (df[u'time_period'] == f'{time_period}')]
     df.set_index(df['order_time'])
     if len(df.index) >= 2:
         n_record = df.loc[df.index[-1]]
@@ -489,15 +524,21 @@ def processing_record(strategy, symbol, time_period):
         o_funds = Decimal(o_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
         pnl = n_funds - o_funds
         trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-        trade_info = pd.DataFrame(trade_info)
-        trade_info.loc[f'{time_period}', 'allocated_funds'] += pnl
+        trade_info = pd.DataFrame(trade_info).astype(str)
+        trade_info.loc[f'{time_period}', 'period_allocated_funds'] += pnl
+        trade_info = trade_info.astype(str)
         trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     else:
         n_record = df.loc[df.index[-1]]
         n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
         trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-        trade_info = pd.DataFrame(trade_info)
-        o_funds = trade_info.loc[f'{time_period}', 'allocated_funds']
+        trade_info = pd.DataFrame(trade_info).astype(str)
+        o_funds = trade_info.loc[f'{time_period}', 'period_allocated_funds']
+        o_funds = modify_decimal(o_funds)
         funds = (o_funds - n_funds) + n_funds * Decimal('0.9996')
-        trade_info.loc[f'{time_period}', 'allocated_funds'] *= modify_decimal(funds)
+        n = trade_info.loc[f'{time_period}', 'period_allocated_funds']
+        n = modify_decimal(n)
+        n *= Decimal(funds).quantize(Decimal('0.000'))
+        trade_info.loc[f'{time_period}', 'period_allocated_funds'] = n
+        trade_info = trade_info.astype(str)
         trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
