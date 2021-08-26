@@ -93,3 +93,4 @@ from datetime import datetime
 #
 #
 # post_order('ETHUSDT', 'reduce_LONG', '1.200')
+# print(dir(ccxt.binance()))

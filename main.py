@@ -74,11 +74,11 @@ def webhook():
                 processing_signal(strategy, symbol, time_period, signal_type)
                 print('Completed!'.center(L))
                 print('>' * 5 + '=' * (L-10) + '<' * 5)
-            return 200
         else:
             abort(403)
     else:
         abort(400)
+    return 'complete', 200
 
 
 if __name__ == '__main__':

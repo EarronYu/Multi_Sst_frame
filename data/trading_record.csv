@@ -1,2 +1,2 @@
-order_time,strategy,symbol,time_period,side,Price,quantity
+,Unnamed: 0,order_time,strategy,symbol,time_period,side,Price,quantity,realized_PNL
 
