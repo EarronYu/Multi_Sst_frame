@@ -562,7 +562,9 @@ def processing_record(strategy, symbol, time_period, signal_type):
         trade_info = trade_info.astype(str)
         trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
         df.loc[df.index[-1], 'realized_PNL'] = Decimal('0.000')
-        df.drop(axis=1, inplace=True)
+        for x in df.columns.values.tolist():
+            if 'Unnamed' in x:
+                df.drop([x], axis=1, inplace=True)
         df = df.astype(str)
         df.to_csv('data//trading_record.csv')
     else:
@@ -579,7 +581,7 @@ def processing_record(strategy, symbol, time_period, signal_type):
         # df.set_index(df['order_time'])
         if len(df.index) >= 2:
             n_record = df.loc[df.index[-1]]
-            o_record = df_o.loc[df.index[-1]]
+            o_record = df_o.loc[df_o.index[-1]]
             n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
             o_funds = Decimal(n_record['quantity']) * Decimal(o_record['Price'])
             pnl = (n_funds - o_funds) * side
@@ -589,8 +591,9 @@ def processing_record(strategy, symbol, time_period, signal_type):
             trade_info.loc[f'{time_period}', 'period_allocated_funds'] = n
             trade_info = trade_info.astype(str)
             df.loc[df.index[-1], 'realized_PNL'] = pnl
-            drop_col = [x for x in df.columns() if 'Unnamed' in x]
-            df.drop([drop_col], axis=1, inplace=True)
+            for x in df.columns.values.tolist():
+                if 'Unnamed' in x:
+                    df.drop([x], axis=1, inplace=True)
             df = df.astype(str)
             df.to_csv('data//trading_record.csv')
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
@@ -607,8 +610,9 @@ def processing_record(strategy, symbol, time_period, signal_type):
             trade_info = trade_info.astype(str)
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             df.loc[df.index[-1], 'realized_PNL'] = Decimal('0.000')
-            drop_col = [x for x in df.columns() if 'Unnamed' in x]
-            df.drop([drop_col], axis=1, inplace=True)
+            for x in df.columns.values.tolist():
+                if 'Unnamed' in x:
+                    df.drop([x], axis=1, inplace=True)
             df = df.astype(str)
             df.to_csv('data//trading_record.csv')
 
