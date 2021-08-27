@@ -1,15 +1,22 @@
 import pandas as pd
+import h5py
 pd.set_option('display.max_columns', None)
-ETHUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='a')
-ETHUSDT_df = pd.DataFrame(ETHUSDT_df)
-ETHUSDT_df.drop(ETHUSDT_df.index)
-ETHUSDT_df.to_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='w')
-DOGEUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='DOGEUSDT', mode='a')
-DOGEUSDT_df = pd.DataFrame(DOGEUSDT_df)
-DOGEUSDT_df.drop(DOGEUSDT_df.index)
-ETHUSDT_df.to_hdf('data//Raishiz_15m_4h_indicator.h5', key='DOGEUSDT', mode='w')
-print(ETHUSDT_df)
-print(DOGEUSDT_df)
+symbol = 'ETHUSDT'
+with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
+    del f[f'{symbol}']
+    f.close()
+
+
+# ETHUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='w')
+# ETHUSDT_df = pd.DataFrame(ETHUSDT_df)
+# ETHUSDT_df.drop(ETHUSDT_df.index)
+# ETHUSDT_df.to_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='w')
+# DOGEUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='DOGEUSDT', mode='a')
+# DOGEUSDT_df = pd.DataFrame(DOGEUSDT_df)
+# DOGEUSDT_df.drop(DOGEUSDT_df.index)
+# ETHUSDT_df.to_hdf('data//Raishiz_15m_4h_indicator.h5', key='DOGEUSDT', mode='w')
+# print(ETHUSDT_df)
+# print(DOGEUSDT_df)
 
 import ccxt
 import json

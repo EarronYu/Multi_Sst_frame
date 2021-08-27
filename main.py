@@ -59,15 +59,16 @@ def webhook():
             signal_type = data["signal_type"]
             if 'remove' in (strategy + symbol + time_period):
                 msg = f'Removing {strategy} {symbol} {time_period}'
-                L = 110
-                print('>' * 5 + '=' * L + '<' * 5)
-                print(msg.center(L + 10))
-                print('Processing...'.center(L + 10))
+                L = 120
+                print('>' * 5 + '=' * (L-10) + '<' * 5)
+                print(msg.center(L))
+                print('Processing...'.center(L))
                 remove(strategy, symbol, time_period)
-                print('Completed!'.center(L + 10))
+                print('Completed!'.center(L))
+                print('>' * 5 + '=' * (L-10) + '<' * 5)
             else:
                 msg = f'Received Trading Information: {strategy} {symbol} {time_period}m {signal_type} Signal'
-                L = 110
+                L = 120
                 print('>' * 5 + '=' * (L-10) + '<' * 5)
                 print(msg.center(L))
                 print('Processing...'.center(L))

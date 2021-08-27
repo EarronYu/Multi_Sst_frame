@@ -4,7 +4,7 @@ BINANCE_CONFIG:
   hostname: fapi.binance.com
   rateLimit: 10
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
-  timeout: 5000
+  timeout: 8000
   verbose: false
 TESTNET_BINANCE_CONFIG:
   apiKey: 55b71bb2a26bcbba05f5e9a572c05279bd622b55f74fea9de6477426b90e0cfb
@@ -12,9 +12,15 @@ TESTNET_BINANCE_CONFIG:
   hostname: testnet.binancefuture.com
   rateLimit: 10
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
-  timeout: 5000
+  timeout: 8000
   verbose: false
 binance_order_types:
+  close_LONG:
+    positionSide: LONG
+    side: SELL
+  close_SHORT:
+    positionSide: SHORT
+    side: BUY
   open_LONG:
     positionSide: LONG
     side: BUY
