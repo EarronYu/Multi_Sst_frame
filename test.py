@@ -1,10 +1,10 @@
 import pandas as pd
-# import h5py
+import h5py
 # pd.set_option('display.max_columns', None)
-# symbol = 'BTCUSDT'
-# with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
-#     del f[f'{symbol}']
-#     f.close()
+symbol = 'BTCUSDT'
+with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
+    del f[f'{symbol}']
+    f.close()
 pd.set_option('display.max_rows', 1000)
 pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
 pd.set_option('display.unicode.ambiguous_as_wide', True)  # 设置命令行输出时的列对齐功能

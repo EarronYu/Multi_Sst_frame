@@ -642,9 +642,9 @@ def processing_record(strategy, symbol, time_period, signal_type):
         trade_info.loc[f'{time_period}', 'period_allocated_funds'] = funds
         trade_info = trade_info.astype(str)
         trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-        df_n.loc[df.index[-1], 'realized_PNL'] = Decimal('0.000')
+        df_n.loc[df_n.index[-1], 'realized_PNL'] = Decimal('0.000')
         df = df.append(df_n)
-        df = df[~df.index.duplicated(keep='first')]
+        df = df[~df.index.duplicated(keep='last')]
         df.sort_index(inplace=True)
         df = df.astype(str)
         df.to_csv('data//trading_record.csv')
@@ -652,25 +652,28 @@ def processing_record(strategy, symbol, time_period, signal_type):
         if signal_type in ['reduce_SHORT', 'close_SHORT']:
             side_o = 'open_SHORT'
             side = Decimal(1)
-            df_o = df[(df[u'side'] == side_o)]
+            df_o = df_n[(df_n[u'side'] == side_o)]
             df_o.sort_index(inplace=True)
         if signal_type in ['reduce_LONG', 'close_LONG']:
             side_o = 'open_LONG'
             side = Decimal(-1)
-            df_o = df[(df[u'side'] == side_o)]
+            df_o = df_n[(df_n[u'side'] == side_o)]
             df_o.sort_index(inplace=True)
-        if len(df.index) >= 2:
-            n_record = df.loc[df.index[-1]]
+        if len(df_n.index) >= 2:
+            n_record = df_n.loc[df_n.index[-1]]
             o_record = df_o.loc[df_o.index[-1]]
             n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
             o_funds = Decimal(n_record['quantity']) * Decimal(o_record['Price'])
             pnl = (n_funds - o_funds) * side
             n = trade_info.loc[f'{time_period}', 'period_allocated_funds']
             n = modify_decimal(n)
-            n += pnl
-            trade_info.loc[f'{time_period}', 'period_allocated_funds'] = n
+            n = n + pnl
+            trade_info.loc[f'{time_period}', 'period_allocated_funds'] = Decimal(n)
             trade_info = trade_info.astype(str)
-            df.loc[df.index[-1], 'realized_PNL'] = pnl
+            df_n.loc[df_n.index[-1], 'realized_PNL'] = pnl
+            df = df.append(df_n)
+            df = df[~df.index.duplicated(keep='last')]
+            df.sort_index(inplace=True)
             df = df.astype(str)
             df.to_csv('data//trading_record.csv')
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
@@ -680,16 +683,14 @@ def processing_record(strategy, symbol, time_period, signal_type):
             o_funds = trade_info.loc[f'{time_period}', 'period_allocated_funds']
             o_funds = modify_decimal(o_funds)
             funds = (o_funds - n_funds) + n_funds * Decimal('0.9996')
-            n = trade_info.loc[f'{time_period}', 'period_allocated_funds']
-            n = modify_decimal(n)
-            n *= modify_decimal(funds)
+            n = modify_decimal(funds)
             trade_info.loc[f'{time_period}', 'period_allocated_funds'] = n
             trade_info = trade_info.astype(str)
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            df.loc[df.index[-1], 'realized_PNL'] = Decimal('0.000')
-            for x in df.columns.values.tolist():
-                if 'Unnamed' in x:
-                    df.drop([x], axis=1, inplace=True)
+            df_n.loc[df_n.index[-1], 'realized_PNL'] = Decimal('0.000')
+            df = df.append(df_n)
+            df = df[~df.index.duplicated(keep='last')]
+            df.sort_index(inplace=True)
             df = df.astype(str)
             df.to_csv('data//trading_record.csv')
 
