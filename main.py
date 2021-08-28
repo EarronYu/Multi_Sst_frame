@@ -38,7 +38,7 @@ def processing_signal(strategy, symbol, time_period, signal_type):
     check_signal(strategy, symbol, time_period)
     update_allocation_statistics(strategy, symbol, time_period)
     processing_trading_action(strategy, symbol, time_period, signal_type)
-
+    cal_allocated_ratio()
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -67,7 +67,7 @@ def webhook():
                 print('Completed!'.center(L))
                 print('>' * 5 + '=' * (L-10) + '<' * 5)
             else:
-                msg = f'Received Trading Information: {strategy} {symbol} {time_period}m {signal_type} Signal'
+                msg = f'Received Trading Information: {strategy} {symbol} {time_period} {signal_type} Signal'
                 L = 120
                 print('>' * 5 + '=' * (L-10) + '<' * 5)
                 print(msg.center(L))

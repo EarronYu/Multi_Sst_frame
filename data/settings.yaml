@@ -4,21 +4,24 @@ BINANCE_CONFIG:
   hostname: fapi.binance.com
   rateLimit: 10
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
-  timeout: 8000
+  timeout: 5000
   verbose: false
-Raishiz_15m_4h_indicator_ETHUSDT_30m_reduce_rate:
+Raishiz_15m_4h_indicator_BTCUSDT_30m_reduce_rate:
 - 0.3
-Raishiz_15m_4h_indicator_ETHUSDT_time_period_list:
+Raishiz_15m_4h_indicator_BTCUSDT_60m_reduce_rate:
+- 0.3
+Raishiz_15m_4h_indicator_BTCUSDT_time_period_list:
+- 60m
 - 30m
 Raishiz_15m_4h_indicator_symbol_list:
-- ETHUSDT
+- BTCUSDT
 TESTNET_BINANCE_CONFIG:
   apiKey: 55b71bb2a26bcbba05f5e9a572c05279bd622b55f74fea9de6477426b90e0cfb
   enableRateLimit: false
   hostname: testnet.binancefuture.com
   rateLimit: 10
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
-  timeout: 8000
+  timeout: 5000
   verbose: false
 binance_order_types:
   close_LONG:
@@ -41,6 +44,7 @@ binance_order_types:
     side: BUY
 default_reduce_rate:
 - 0.3
+maximum_number_of_attempts: 10
 pin: 23Dot140692632779!
 strategy_list:
 - Raishiz_15m_4h_indicator
@@ -72,7 +76,7 @@ test_info:
   symbol:
   - insert_symbol
   time_period:
-  - insert_timer_period
+  - insert_time_period
   total_yield:
   - '0.000'
 times:

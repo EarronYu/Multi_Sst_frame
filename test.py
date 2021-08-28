@@ -1,11 +1,16 @@
 import pandas as pd
-import h5py
+# import h5py
+# pd.set_option('display.max_columns', None)
+# symbol = 'ETHUSDT'
+# with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
+#     del f[f'{symbol}']
+#     f.close()
+pd.set_option('max_colwidth', None)
 pd.set_option('display.max_columns', None)
-symbol = 'ETHUSDT'
-with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
-    del f[f'{symbol}']
-    f.close()
-
+# df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='r')
+# print(df)
+df = pd.read_csv('data//trading_record.csv')
+print(df)
 
 # ETHUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='w')
 # ETHUSDT_df = pd.DataFrame(ETHUSDT_df)
