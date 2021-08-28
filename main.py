@@ -38,7 +38,6 @@ def processing_signal(strategy, symbol, time_period, signal_type):
     check_signal(strategy, symbol, time_period)
     update_allocation_statistics(strategy, symbol, time_period)
     processing_trading_action(strategy, symbol, time_period, signal_type)
-    cal_allocated_ratio()
 
 
 @app.route('/webhook', methods=['POST'])
@@ -54,6 +53,7 @@ def webhook():
         if data["signal_type"] == 'schedule_sync':
             schedule_sync()
         if get_token() == data['key']:  # 如果get_token返回来的值等于data数据容器中的'key', 向下执行
+            start = time.time()
             strategy = data["strategy"]
             symbol = data["symbol"]
             time_period = data["time_period"]
@@ -75,7 +75,10 @@ def webhook():
                 print('Processing...'.center(L))
                 processing_signal(strategy, symbol, time_period, signal_type)
                 print('Completed!'.center(L))
-                print('>' * 5 + '=' * (L-10) + '<' * 5)
+            end = time.time()
+            t = end - start
+            print(f'Time Cost: {t}'.center(120))
+            print('>' * 5 + '=' * (L - 10) + '<' * 5)
         else:
             abort(403)
     else:

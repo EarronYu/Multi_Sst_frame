@@ -6,10 +6,13 @@ BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
-Raishiz_15m_4h_indicator_BTCUSDT_60m_reduce_rate:
+Raishiz_15m_4h_indicator_BTCUSDT_15m_reduce_rate:
+- 0.3
+Raishiz_15m_4h_indicator_BTCUSDT_30m_reduce_rate:
 - 0.3
 Raishiz_15m_4h_indicator_BTCUSDT_time_period_list:
-- 60m
+- 15m
+- 30m
 Raishiz_15m_4h_indicator_symbol_list:
 - BTCUSDT
 TESTNET_BINANCE_CONFIG:
@@ -20,6 +23,15 @@ TESTNET_BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
+Vision_algorithmic_indicator_BTCUSDT_30m_reduce_rate:
+- 0.3
+Vision_algorithmic_indicator_BTCUSDT_60m_reduce_rate:
+- 0.3
+Vision_algorithmic_indicator_BTCUSDT_time_period_list:
+- 30m
+- 60m
+Vision_algorithmic_indicator_symbol_list:
+- BTCUSDT
 binance_order_types:
   close_LONG:
     positionSide: LONG
@@ -44,6 +56,7 @@ default_reduce_rate:
 maximum_number_of_attempts: 10
 pin: 23Dot140692632779!
 strategy_list:
+- Vision_algorithmic_indicator
 - Raishiz_15m_4h_indicator
 test_info:
   account_balance:

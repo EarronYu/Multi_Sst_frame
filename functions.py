@@ -6,6 +6,7 @@ import yaml
 import json
 import time
 import h5py
+import sys
 from numpy import nan as NaN
 
 pd.set_option('display.max_rows', 1000)
@@ -90,6 +91,9 @@ def check_signal(strategy, symbol, time_period):
             temp_info['time_period'] = 'none'
             temp_info = pd.DataFrame(temp_info).astype(str)
             temp_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a', format='t')
+            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            print(df_02, strategy, symbol, time_period)
+            print('行号: ', str(sys._getframe().f_lineno))
         if time_period not in data[f'{strategy}_{symbol}_time_period_list']:
             data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
             data[f'{strategy}_{symbol}_time_period_list'] = list(set(data[f'{strategy}_{symbol}_time_period_list']))
@@ -113,6 +117,9 @@ def check_signal(strategy, symbol, time_period):
             df = df[~df.index.duplicated(keep='first')]
             df = df.astype(str)
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            print(df_02, strategy, symbol, time_period)
+            print('行号: ', str(sys._getframe().f_lineno))
         yaml.dump(data, f)
         f.close()
 
@@ -270,6 +277,9 @@ def join(strategy, symbol, time_period):
     df.loc[time_period, 'period_allocated_ratio'] = modify_decimal(1 / L)
     df = df.astype(str)
     df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+    df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+    print(df_02, strategy, symbol, time_period)
+    print('行号: ', str(sys._getframe().f_lineno))
     # 编辑好各symbol各period_allocated
 
 
@@ -289,29 +299,28 @@ def sync(latest_balance):
                 df.loc[t, 'period_allocated_funds'] = modify_decimal(latest_balance * period_allocated_ratio)
             df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
+            df_02 = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
+            print(df_02, S, s, t)
+            print('行号: ', str(sys._getframe().f_lineno))
 
 
 def cal_allocated_ratio():
     """
     用于通常情况下的资金分配, 用当前策略的allocated_funds来计算出allocated_ratio
     """
-    account_balance = Decimal('0.000')
-    symbol_allocated_funds = Decimal('0.000')
-    strategy_allocated_funds = Decimal('0.000')
     # 累加出symbol_allocated_funds和strategy_allocated_funds
+    account_balance = Decimal('0.000')
     for S in data['strategy_list']:
+        strategy_allocated_funds = Decimal('0.000')
         for s in data[f'{S}_symbol_list']:
-            df = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
+            symbol_allocated_funds = Decimal('0.000')
+            df = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
             df = pd.DataFrame(df).astype(str)
-            if 'time_period' in df.columns:
-                df.set_index(['time_period'], inplace=True)
             for t in data[f'{S}_{s}_time_period_list']:
                 funds = df.loc[t, 'period_allocated_funds']
                 funds = modify_decimal(funds)
                 symbol_allocated_funds += funds
             strategy_allocated_funds += symbol_allocated_funds
-            df = df.astype(str)
-            df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
         account_balance += strategy_allocated_funds
     for S in data['strategy_list']:
         for s in data[f'{S}_symbol_list']:
@@ -327,6 +336,9 @@ def cal_allocated_ratio():
                 df.loc[t, 'period_allocated_ratio'] = modify_decimal(period_allocated_funds / account_balance)
             df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
+            df_02 = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
+            print(df_02, S, s, t)
+            print('行号: ', str(sys._getframe().f_lineno))
 
 
 def remove(strategy, symbol, time_period):
@@ -360,6 +372,9 @@ def remove(strategy, symbol, time_period):
             del df[f'{time_period}']
             df = df.astype(str)
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            print(df_02, strategy, symbol, time_period)
+            print('行号: ', str(sys._getframe().f_lineno))
     with open(yaml_path, 'r') as f:
         global data
         data = f.read()
@@ -390,6 +405,9 @@ def remove(strategy, symbol, time_period):
                 df.loc[t, 'period_allocated_ratio'] = n
             df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
+            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            print(df_02, strategy, symbol, time_period)
+            print('行号: ', str(sys._getframe().f_lineno))
     latest_balance = get_latest_balance()
     sync(latest_balance)
     cal_allocated_ratio()
@@ -447,7 +465,8 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
         trading_info.loc[time_period, 'period_LONG_position'] = Decimal(0)
     if signal_type == 'close_SHORT':
         trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(0)
-    return quantity, trading_info
+    trading_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+    return quantity
 
 
 def processing_trading_action(strategy, symbol, time_period, signal_type):
@@ -463,67 +482,65 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
     if signal_type == 'reduce_LONG':
         quantity = trading_info.loc[time_period, 'period_LONG_position']
         quantity = modify_order_quantity(quantity_precision, quantity)
-        quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
-            processing_record(strategy, symbol, time_period, signal_type)
+            processing_record(strategy, symbol, time_period, signal_type, order)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
     if signal_type == 'reduce_SHORT':
         quantity = trading_info.loc[time_period, 'period_SHORT_position']
         quantity = modify_order_quantity(price_precision, quantity)
-        quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
-            processing_record(strategy, symbol, time_period, signal_type)
+            processing_record(strategy, symbol, time_period, signal_type, order)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
     if signal_type == 'open_LONG':
         reduce_quantity = trading_info.loc[time_period, 'period_SHORT_position']
         reduce_quantity = modify_order_quantity(quantity_precision, reduce_quantity)
-        reduce_quantity, trading_info = position_management('close_SHORT', strategy, symbol, time_period, reduce_quantity, trading_info)
+        reduce_quantity = position_management('close_SHORT', strategy, symbol, time_period, reduce_quantity, trading_info)
         if (reduce_quantity > Decimal(0)) and ((latest_price * reduce_quantity) > 10):
             order = post_order(symbol, 'close_SHORT', reduce_quantity)
             trading_record(order, strategy, symbol, time_period, 'close_SHORT')
-            processing_record(strategy, symbol, time_period, 'close_SHORT')
+            processing_record(strategy, symbol, time_period, 'close_SHORT', order)
         n = trading_info.loc[time_period, 'period_allocated_funds']
         allocated_funds = modify_decimal(n)
         quantity = allocated_funds / latest_price
         quantity = modify_order_quantity(quantity_precision, quantity)
-        quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
-            processing_record(strategy, symbol, time_period, signal_type)
+            processing_record(strategy, symbol, time_period, signal_type, order)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
     if signal_type == 'open_SHORT':
         reduce_quantity = trading_info.loc[time_period, 'period_LONG_position']
         reduce_quantity = modify_order_quantity(quantity_precision, reduce_quantity)
-        reduce_quantity, trading_info = position_management('close_LONG', strategy, symbol, time_period, reduce_quantity, trading_info)
+        reduce_quantity = position_management('close_LONG', strategy, symbol, time_period, reduce_quantity, trading_info)
         if (reduce_quantity > Decimal(0)) and ((latest_price * reduce_quantity) > 10):
             order = post_order(symbol, 'close_LONG', reduce_quantity)
             trading_record(order, strategy, symbol, time_period, 'close_LONG')
-            processing_record(strategy, symbol, time_period, 'close_LONG')
+            processing_record(strategy, symbol, time_period, 'close_LONG', order)
         n = trading_info.loc[time_period, 'period_allocated_funds']
         allocated_funds = modify_decimal(n)
         quantity = allocated_funds / latest_price
         quantity = modify_order_quantity(quantity_precision, quantity)
-        quantity, trading_info = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
         if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
-            processing_record(strategy, symbol, time_period, signal_type)
+            processing_record(strategy, symbol, time_period, signal_type, order)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
-    trading_info = pd.DataFrame(trading_info).astype(str)
-    trading_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
 
 
 def post_order(symbol, signal_type, quantity):
@@ -617,7 +634,7 @@ def trading_record(order, strategy, symbol, time_period, signal_type):
     df.to_csv('data//trading_record.csv')
 
 
-def processing_record(strategy, symbol, time_period, signal_type):
+def processing_record(strategy, symbol, time_period, signal_type, order):
     """
     通过record来计算PNL和allocated_funds
     """
@@ -627,21 +644,21 @@ def processing_record(strategy, symbol, time_period, signal_type):
         df['order_time'] = pd.to_datetime(df['order_time'])
         df.set_index('order_time', inplace=True)
     df_n = df[(df[u'strategy'] == f'{strategy}') & (df[u'symbol'] == f'{symbol}') & (df[u'time_period'] == f'{time_period}')]
-    trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-    trade_info = pd.DataFrame(trade_info).astype(str)
-    if 'time_period' in trade_info.columns:
-        trade_info.set_index(['time_period'], inplace=True)
     if signal_type in ['open_LONG', 'open_SHORT']:
-        n_record = dict(df_n.loc[df_n.index[-1]])
-        q = n_record['quantity']
-        p = n_record['Price']
+        q = order['executedQty']
+        p = order['avgPrice']
         n_funds = Decimal(q) * Decimal(p)
+        trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+        trade_info = pd.DataFrame(trade_info).astype(str)
         o_funds = trade_info.loc[f'{time_period}', 'period_allocated_funds']
         o_funds = modify_decimal(o_funds)
-        funds = (o_funds - n_funds) + n_funds * Decimal('0.9996')
+        funds = o_funds - n_funds * Decimal('0.0004')
         trade_info.loc[f'{time_period}', 'period_allocated_funds'] = funds
         trade_info = trade_info.astype(str)
         trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+        df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+        print(df_02, strategy, symbol, time_period)
+        print('行号: ', str(sys._getframe().f_lineno))
         df_n.loc[df_n.index[-1], 'realized_PNL'] = Decimal('0.000')
         df = df.append(df_n)
         df = df[~df.index.duplicated(keep='last')]
@@ -650,11 +667,19 @@ def processing_record(strategy, symbol, time_period, signal_type):
         df.to_csv('data//trading_record.csv')
     else:
         if signal_type in ['reduce_SHORT', 'close_SHORT']:
+            trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            trade_info = pd.DataFrame(trade_info).astype(str)
+            if 'time_period' in trade_info.columns:
+                trade_info.set_index(['time_period'], inplace=True)
             side_o = 'open_SHORT'
             side = Decimal(1)
             df_o = df_n[(df_n[u'side'] == side_o)]
             df_o.sort_index(inplace=True)
         if signal_type in ['reduce_LONG', 'close_LONG']:
+            trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            trade_info = pd.DataFrame(trade_info).astype(str)
+            if 'time_period' in trade_info.columns:
+                trade_info.set_index(['time_period'], inplace=True)
             side_o = 'open_LONG'
             side = Decimal(-1)
             df_o = df_n[(df_n[u'side'] == side_o)]
@@ -677,7 +702,14 @@ def processing_record(strategy, symbol, time_period, signal_type):
             df = df.astype(str)
             df.to_csv('data//trading_record.csv')
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            print(df_02, strategy, symbol, time_period)
+            print('行号: ', str(sys._getframe().f_lineno))
         else:
+            trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            trade_info = pd.DataFrame(trade_info).astype(str)
+            if 'time_period' in trade_info.columns:
+                trade_info.set_index(['time_period'], inplace=True)
             n_record = df.loc[df.index[-1]]
             n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price'])
             o_funds = trade_info.loc[f'{time_period}', 'period_allocated_funds']
@@ -687,6 +719,9 @@ def processing_record(strategy, symbol, time_period, signal_type):
             trade_info.loc[f'{time_period}', 'period_allocated_funds'] = n
             trade_info = trade_info.astype(str)
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            print(df_02, strategy, symbol, time_period)
+            print('行号: ', str(sys._getframe().f_lineno))
             df_n.loc[df_n.index[-1], 'realized_PNL'] = Decimal('0.000')
             df = df.append(df_n)
             df = df[~df.index.duplicated(keep='last')]

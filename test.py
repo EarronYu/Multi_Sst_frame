@@ -1,10 +1,13 @@
 import pandas as pd
 import h5py
+import sys
 # pd.set_option('display.max_columns', None)
 symbol = 'BTCUSDT'
-with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
-    del f[f'{symbol}']
-    f.close()
+strategy_01 = 'Raishiz_15m_4h_indicator'
+strategy_02 = 'Vision_algorithmic_indicator'
+# with h5py.File(f'data//{strategy_02}.h5', "a") as f:
+#     del f[f'{symbol}']
+#     f.close()
 pd.set_option('display.max_rows', 1000)
 pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
 pd.set_option('display.unicode.ambiguous_as_wide', True)  # 设置命令行输出时的列对齐功能
@@ -13,8 +16,11 @@ pd.set_option('display.max_columns', 1000)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_colwidth', 1000)
 pd.set_option('mode.chained_assignment', None)
-df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='BTCUSDT', mode='r')
-print(df)
+df_01 = pd.read_hdf(f'data//{strategy_01}.h5', key=f'{symbol}', mode='r')
+df_02 = pd.read_hdf(f'data//{strategy_02}.h5', key=f'{symbol}', mode='r')
+print(df_01)
+print(df_02)
+print('行号：', str(sys._getframe().f_lineno))
 # df = pd.read_csv('data//trading_record.csv')
 # print(df)
 

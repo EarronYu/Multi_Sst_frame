@@ -1,2 +1,24 @@
 order_time,strategy,symbol,time_period,side,Price,quantity,realized_PNL
-2021-08-28 18:16:53.193,Raishiz_15m_4h_indicator,BTCUSDT,60m,open_SHORT,47124.36,0.289,nan
+2021-08-28 21:11:35.830,Raishiz_15m_4h_indicator,BTCUSDT,15m,open_SHORT,47124.36,0.287,0.0
+2021-08-28 21:12:58.830,Vision_algorithmic_indicator,BTCUSDT,30m,open_LONG,47126.25,0.138,0.0
+2021-08-28 21:13:32.289,Raishiz_15m_4h_indicator,BTCUSDT,30m,open_LONG,47126.25,0.094,0.0
+2021-08-28 21:19:03.090,Vision_algorithmic_indicator,BTCUSDT,60m,open_SHORT,47125.3,0.071,0.0
+2021-08-28 21:20:24.233,Raishiz_15m_4h_indicator,BTCUSDT,15m,close_SHORT,47126.25,0.287,-4.867663499999404
+2021-08-28 21:20:24.555,Raishiz_15m_4h_indicator,BTCUSDT,15m,open_LONG,47126.25,0.072,0.0
+2021-08-28 21:23:40.413,Vision_algorithmic_indicator,BTCUSDT,30m,close_LONG,47125.3,0.138,2.732416559999713
+2021-08-28 21:23:40.764,Vision_algorithmic_indicator,BTCUSDT,30m,open_SHORT,47125.3,0.072,0.0
+2021-08-28 21:25:49.060,Vision_algorithmic_indicator,BTCUSDT,60m,close_SHORT,47125.31,0.071,-1.3376488039998526
+2021-08-28 21:25:49.299,Vision_algorithmic_indicator,BTCUSDT,60m,open_LONG,47125.31,0.071,0.0
+2021-08-28 21:49:37.102,Vision_algorithmic_indicator,BTCUSDT,30m,close_SHORT,47125.31,0.072,-1.3564889279998504
+2021-08-28 21:51:29.555,Vision_algorithmic_indicator,BTCUSDT,30m,open_LONG,47126.25,0.072,0.0
+2021-08-28 22:12:42.828,Raishiz_15m_4h_indicator,BTCUSDT,30m,close_LONG,47124.36,0.094,1.9495359359998048
+2021-08-28 22:12:57.237,Raishiz_15m_4h_indicator,BTCUSDT,30m,open_SHORT,47125.3,0.071,0.0
+2021-08-28 22:29:40.732,Raishiz_15m_4h_indicator,BTCUSDT,15m,open_LONG,47126.25,0.072,0.0
+2021-08-28 22:32:24.503,Vision_algorithmic_indicator,BTCUSDT,60m,close_LONG,47124.36,0.071,1.4057818239998523
+2021-08-28 22:32:24.838,Vision_algorithmic_indicator,BTCUSDT,60m,open_SHORT,47124.36,0.071,0.0
+2021-08-28 22:41:29.041,Vision_algorithmic_indicator,BTCUSDT,30m,close_LONG,47124.36,0.072,1.4932615679998504
+2021-08-28 22:41:29.323,Vision_algorithmic_indicator,BTCUSDT,30m,open_SHORT,47124.36,0.072,0.0
+2021-08-28 22:52:15.342,Raishiz_15m_4h_indicator,BTCUSDT,15m,close_LONG,47124.36,0.072,1.4932615679998504
+2021-08-28 22:52:15.617,Raishiz_15m_4h_indicator,BTCUSDT,15m,open_SHORT,47124.36,0.072,0.0
+2021-08-28 22:56:11.304,Vision_algorithmic_indicator,BTCUSDT,30m,close_SHORT,47125.31,0.072,-1.2888089279998505
+2021-08-28 22:56:11.595,Vision_algorithmic_indicator,BTCUSDT,30m,open_LONG,47125.31,0.072,0.000
