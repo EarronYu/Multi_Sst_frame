@@ -1,16 +1,22 @@
 import pandas as pd
-import h5py
-pd.set_option('display.max_columns', None)
-symbol = 'BTCUSDT'
-with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
-    del f[f'{symbol}']
-    f.close()
-pd.set_option('max_colwidth', None)
-pd.set_option('display.max_columns', None)
-# df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='r')
-# print(df)
-df = pd.read_csv('data//trading_record.csv')
+# import h5py
+# pd.set_option('display.max_columns', None)
+# symbol = 'BTCUSDT'
+# with h5py.File(f'data//Raishiz_15m_4h_indicator.h5', "a") as f:
+#     del f[f'{symbol}']
+#     f.close()
+pd.set_option('display.max_rows', 1000)
+pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
+pd.set_option('display.unicode.ambiguous_as_wide', True)  # 设置命令行输出时的列对齐功能
+pd.set_option('display.unicode.east_asian_width', True)
+pd.set_option('display.max_columns', 1000)
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_colwidth', 1000)
+pd.set_option('mode.chained_assignment', None)
+df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='BTCUSDT', mode='r')
 print(df)
+# df = pd.read_csv('data//trading_record.csv')
+# print(df)
 
 # ETHUSDT_df = pd.read_hdf('data//Raishiz_15m_4h_indicator.h5', key='ETHUSDT', mode='w')
 # ETHUSDT_df = pd.DataFrame(ETHUSDT_df)

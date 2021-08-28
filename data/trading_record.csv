@@ -1,1 +1,8 @@
 order_time,strategy,symbol,time_period,side,Price,quantity,realized_PNL
+2021-08-28 16:49:19.860,Raishiz_15m_4h_indicator,BTCUSDT,60m,open_LONG,47126.25,0.305,nan
+2021-08-28 16:51:35.977,Raishiz_15m_4h_indicator,BTCUSDT,30m,open_LONG,47126.25,0.158,nan
+2021-08-28 16:54:28.531,Raishiz_15m_4h_indicator,BTCUSDT,15m,open_LONG,47125.31,0.107,nan
+2021-08-28 16:55:33.432,Raishiz_15m_4h_indicator,BTCUSDT,30m,close_LONG,47125.3,0.158,2.979898959999672
+2021-08-28 16:59:03.816,Raishiz_15m_4h_indicator,BTCUSDT,30m,open_SHORT,47124.36,0.107,nan
+2021-08-28 17:04:33.940,Raishiz_15m_4h_indicator,BTCUSDT,60m,close_LONG,47124.36,0.305,6.038921919999368
+2021-08-28 17:04:34.598,Raishiz_15m_4h_indicator,BTCUSDT,60m,open_SHORT,47124.36,0.107,nan
