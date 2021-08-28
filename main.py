@@ -40,6 +40,7 @@ def processing_signal(strategy, symbol, time_period, signal_type):
     processing_trading_action(strategy, symbol, time_period, signal_type)
     cal_allocated_ratio()
 
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     """

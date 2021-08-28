@@ -634,9 +634,9 @@ def trading_record(order, strategy, symbol, time_period, signal_type):
         }
     df = pd.DataFrame(df)
     if 'order_time' in df.columns:
-        df.set_index['order_time', inplace=True)
+        df['order_time'] = pd.to_datetime(df['order_time'])
+        df.set_index('order_time', inplace=True)
     df = record.append(df)
-    df.index = pd.DatetimeIndex(df.index)
     df = df.astype(str)
     df.to_csv('data//trading_record.csv')
 
@@ -648,8 +648,8 @@ def processing_record(strategy, symbol, time_period, signal_type):
     df = pd.read_csv('data//trading_record.csv')
     df = pd.DataFrame(df).astype(str)
     if 'order_time' in df.columns:
+        df['order_time'] = pd.to_datetime(df['order_time'])
         df.set_index('order_time', inplace=True)
-    df.index = pd.DatetimeIndex(df.index)
     df = df[(df[u'strategy'] == f'{strategy}') & (df[u'symbol'] == f'{symbol}') & (df[u'time_period'] == f'{time_period}')]
     trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     trade_info = pd.DataFrame(trade_info).astype(str)
