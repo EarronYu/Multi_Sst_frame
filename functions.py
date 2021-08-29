@@ -91,9 +91,9 @@ def check_signal(strategy, symbol, time_period):
             temp_info['time_period'] = 'none'
             temp_info = pd.DataFrame(temp_info).astype(str)
             temp_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a', format='t')
-            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            print(df_02, strategy, symbol, time_period)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            # print(df_02, strategy, symbol, time_period)
+            # print('行号: ', str(sys._getframe().f_lineno))
         if time_period not in data[f'{strategy}_{symbol}_time_period_list']:
             data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
             data[f'{strategy}_{symbol}_time_period_list'] = list(set(data[f'{strategy}_{symbol}_time_period_list']))
@@ -117,9 +117,9 @@ def check_signal(strategy, symbol, time_period):
             df = df[~df.index.duplicated(keep='first')]
             df = df.astype(str)
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            print(df_02, strategy, symbol, time_period)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            # print(df_02, strategy, symbol, time_period)
+            # print('行号: ', str(sys._getframe().f_lineno))
         yaml.dump(data, f)
         f.close()
 
@@ -277,9 +277,9 @@ def join(strategy, symbol, time_period):
     df.loc[time_period, 'period_allocated_ratio'] = modify_decimal(1 / L)
     df = df.astype(str)
     df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-    df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-    print(df_02, strategy, symbol, time_period)
-    print('行号: ', str(sys._getframe().f_lineno))
+    # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+    # print(df_02, strategy, symbol, time_period)
+    # print('行号: ', str(sys._getframe().f_lineno))
     # 编辑好各symbol各period_allocated
 
 
@@ -299,9 +299,9 @@ def sync(latest_balance):
                 df.loc[t, 'period_allocated_funds'] = modify_decimal(latest_balance * period_allocated_ratio)
             df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
-            df_02 = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
-            print(df_02, S, s, t)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
+            # print(df_02, S, s, t)
+            # print('行号: ', str(sys._getframe().f_lineno))
 
 
 def cal_allocated_ratio():
@@ -336,9 +336,9 @@ def cal_allocated_ratio():
                 df.loc[t, 'period_allocated_ratio'] = modify_decimal(period_allocated_funds / account_balance)
             df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
-            df_02 = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
-            print(df_02, S, s, t)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
+            # print(df_02, S, s, t)
+            # print('行号: ', str(sys._getframe().f_lineno))
 
 
 def remove(strategy, symbol, time_period):
@@ -372,9 +372,9 @@ def remove(strategy, symbol, time_period):
             del df[f'{time_period}']
             df = df.astype(str)
             df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            print(df_02, strategy, symbol, time_period)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            # print(df_02, strategy, symbol, time_period)
+            # print('行号: ', str(sys._getframe().f_lineno))
     with open(yaml_path, 'r') as f:
         global data
         data = f.read()
@@ -405,9 +405,9 @@ def remove(strategy, symbol, time_period):
                 df.loc[t, 'period_allocated_ratio'] = n
             df = df.astype(str)
             df.to_hdf(f'data//{S}.h5', key=f'{s}', mode='a')
-            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            print(df_02, strategy, symbol, time_period)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            # print(df_02, strategy, symbol, time_period)
+            # print('行号: ', str(sys._getframe().f_lineno))
     latest_balance = get_latest_balance()
     sync(latest_balance)
     cal_allocated_ratio()
@@ -465,6 +465,7 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
         trading_info.loc[time_period, 'period_LONG_position'] = Decimal(0)
     if signal_type == 'close_SHORT':
         trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(0)
+    trading_info = trading_info.astype(str)
     trading_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     return quantity
 
@@ -569,6 +570,7 @@ def post_order(symbol, signal_type, quantity):
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
                 raise ccxt.RequestTimeout
+                """Plan to add an error report SMS function here"""
             else:
                 n += 1
                 continue
@@ -656,9 +658,9 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
         trade_info.loc[f'{time_period}', 'period_allocated_funds'] = funds
         trade_info = trade_info.astype(str)
         trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-        df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-        print(df_02, strategy, symbol, time_period)
-        print('行号: ', str(sys._getframe().f_lineno))
+        # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+        # print(df_02, strategy, symbol, time_period)
+        # print('行号: ', str(sys._getframe().f_lineno))
         df_n.loc[df_n.index[-1], 'realized_PNL'] = Decimal('0.000')
         df = df.append(df_n)
         df = df[~df.index.duplicated(keep='last')]
@@ -702,9 +704,9 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
             df = df.astype(str)
             df.to_csv('data//trading_record.csv')
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            print(df_02, strategy, symbol, time_period)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            # print(df_02, strategy, symbol, time_period)
+            # print('行号: ', str(sys._getframe().f_lineno))
         else:
             trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             trade_info = pd.DataFrame(trade_info).astype(str)
@@ -719,9 +721,9 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
             trade_info.loc[f'{time_period}', 'period_allocated_funds'] = n
             trade_info = trade_info.astype(str)
             trade_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            print(df_02, strategy, symbol, time_period)
-            print('行号: ', str(sys._getframe().f_lineno))
+            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+            # print(df_02, strategy, symbol, time_period)
+            # print('行号: ', str(sys._getframe().f_lineno))
             df_n.loc[df_n.index[-1], 'realized_PNL'] = Decimal('0.000')
             df = df.append(df_n)
             df = df[~df.index.duplicated(keep='last')]

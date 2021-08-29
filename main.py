@@ -7,8 +7,11 @@ from functions import *
 from flask import Flask, request, abort
 import ast
 import hashlib
+import time
+import datetime
+from apscheduler.schedulers.background import BackgroundScheduler, BlockingScheduler
 
-
+time_delta = 0
 L = 0
 # 建立flask app
 app = Flask(__name__)
@@ -35,9 +38,96 @@ def get_token():
 
 
 def processing_signal(strategy, symbol, time_period, signal_type):
+    start = time.time()
     check_signal(strategy, symbol, time_period)
     update_allocation_statistics(strategy, symbol, time_period)
     processing_trading_action(strategy, symbol, time_period, signal_type)
+    end = time.time()
+    t = end - start
+    print(f'Time Cost: {t}'.center(120))
+    print('Completed!'.center(L))
+    print('>' * 5 + '=' * (L - 10) + '<' * 5)
+
+
+def job_func():
+    print('okay')
+
+
+def next_run_time(time_interval, ahead_seconds=5):
+    """
+    根据time_interval，计算下次运行的时间，下一个整点时刻。
+    目前只支持分钟和小时。
+    :param time_interval: 运行的周期，15m，1h
+    :param ahead_seconds: 预留的目标时间和当前时间的间隙
+    :return: 下次运行的时间
+    案例：
+    15m  当前时间为：12:50:51  返回时间为：13:00:00
+    15m  当前时间为：12:39:51  返回时间为：12:45:00
+    10m  当前时间为：12:38:51  返回时间为：12:40:00
+    5m  当前时间为：12:33:51  返回时间为：12:35:00
+    5m  当前时间为：12:34:51  返回时间为：12:35:00
+
+    1h  当前时间为：14:37:51  返回时间为：15:00:00
+    2h  当前时间为：00:37:51  返回时间为：02:00:00
+
+    30m  当前时间为：21日的23:33:51  返回时间为：22日的00:00:00
+    5m  当前时间为：21日的23:57:51  返回时间为：22日的00:00:00
+
+    ahead_seconds = 5
+    15m  当前时间为：12:59:57  返回时间为：13:15:00，而不是 13:00:00
+    """
+    if time_interval.endswith('m') or time_interval.endswith('h'):
+        pass
+    elif time_interval.endswith('T'):
+        time_interval = time_interval.replace('T', 'm')
+    elif time_interval.endswith('H'):
+        time_interval = time_interval.replace('H', 'h')
+    else:
+        print('illegal time_interval format, Exit')
+        exit()
+    ti = pd.to_timedelta(time_interval)
+    now_time = datetime.datetime.now()
+    # now_time = datetime(2019, 5, 9, 23, 50, 30)  # 指定now_time，可用于测试
+    this_midnight = now_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    min_step = datetime.timedelta(minutes=1)
+    target_time = now_time.replace(second=0, microsecond=0)
+
+    while True:
+        target_time = target_time + min_step
+        delta = target_time - this_midnight
+        if delta.seconds % ti.seconds == 0 and (target_time - now_time).seconds >= ahead_seconds:
+            # 当符合运行周期，并且目标时间有足够大的余地，默认为60s
+            break
+    target_time = target_time - datetime.timedelta(minutes=1)
+    print(f'Next Reset Time_Delta Time：{target_time}')
+    return target_time
+
+
+def reset_time():
+    time.sleep(60)
+    global time_delta
+    time_delta = 0
+    time_now = datetime.datetime.now()
+    target_time = time_now + datetime.timedelta(minutes=4)
+    target_time = target_time.replace(second=0, microsecond=0)
+    scheduler.add_job(reset_time, 'date', run_date=target_time, args=[], misfire_grace_time=10)
+    print('Time Delta Reset')
+    print(f'Next Reset Time_Delta Time：{target_time}')
+
+
+def offset_time():
+    time_now = datetime.datetime.now()
+    global time_delta
+    target_time = time_now + datetime.timedelta(seconds=time_delta)
+    time_delta += 3
+    return target_time
+
+
+scheduler = BackgroundScheduler()
+# scheduler = BlockingScheduler()
+scheduler.add_job(reset_time, 'date', run_date=next_run_time('5m'), args=[], misfire_grace_time=10)
+scheduler.add_job(schedule_sync, 'cron', month='*',  day='*', hour='7, 19', minute='59', args=[])
+scheduler.start()
 
 
 @app.route('/webhook', methods=['POST'])
@@ -50,10 +140,7 @@ def webhook():
         # Parse the string data from tradingview into a python dict
         data = parse_webhook(request.get_data(as_text=True))  # 将接收到的信息交给action中的parse_webhook函数处理, return给data
         # Check that the key is correct
-        if data["signal_type"] == 'schedule_sync':
-            schedule_sync()
         if get_token() == data['key']:  # 如果get_token返回来的值等于data数据容器中的'key', 向下执行
-            start = time.time()
             strategy = data["strategy"]
             symbol = data["symbol"]
             time_period = data["time_period"]
@@ -67,18 +154,14 @@ def webhook():
                 remove(strategy, symbol, time_period)
                 print('Completed!'.center(L))
                 print('>' * 5 + '=' * (L-10) + '<' * 5)
+                print('Completed!'.center(L))
             else:
                 msg = f'Received Trading Information: {strategy} {symbol} {time_period} {signal_type} Signal'
                 L = 120
                 print('>' * 5 + '=' * (L-10) + '<' * 5)
                 print(msg.center(L))
                 print('Processing...'.center(L))
-                processing_signal(strategy, symbol, time_period, signal_type)
-                print('Completed!'.center(L))
-            end = time.time()
-            t = end - start
-            print(f'Time Cost: {t}'.center(120))
-            print('>' * 5 + '=' * (L - 10) + '<' * 5)
+                scheduler.add_job(processing_signal, 'date', run_date=offset_time(), args=[strategy, symbol, time_period, signal_type], misfire_grace_time=10)
         else:
             abort(403)
     else:
