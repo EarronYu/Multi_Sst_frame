@@ -49,8 +49,14 @@ def processing_signal(strategy, symbol, time_period, signal_type):
     print('>' * 5 + '=' * (L - 10) + '<' * 5)
 
 
-def job_func():
-    print('okay')
+def tradingview_alart():
+    msg = 'Time to modify expire dates on tradingview!'
+    send_message(msg)
+    time_now = datetime.datetime.now()
+    target_time = time_now + datetime.timedelta(hours=2)
+    target_time = target_time.replace(second=0, microsecond=0)
+    scheduler.add_job(tradingview_alart, 'date', run_date=target_time, args=[], misfire_grace_time=10)
+
 
 
 def next_run_time(time_interval, ahead_seconds=5):
@@ -124,7 +130,8 @@ def offset_time():
 scheduler = BackgroundScheduler()
 # scheduler = BlockingScheduler()
 scheduler.add_job(reset_time, 'date', run_date=next_run_time('5m'), args=[], misfire_grace_time=10)
-scheduler.add_job(schedule_sync, 'cron', month='*',  day='*', hour='7, 19', minute='59', args=[])
+scheduler.add_job(schedule_sync, 'cron', month='*',  day='*', hour='7, 19', minute='59', args=[], misfire_grace_time=10)
+scheduler.add_job(tradingview_alart, 'cron', month='1-12', day='1st mon', hour='10', args=[], misfire_grace_time=10)
 scheduler.start()
 
 
