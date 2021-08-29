@@ -146,7 +146,6 @@ def usdt_future_exchange_info(symbol):
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
-                raise ccxt.RequestTimeout
             else:
                 n += 1
                 continue
@@ -170,7 +169,6 @@ def get_ticker_price(symbol):
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
-                raise ccxt.RequestTimeout
             else:
                 n += 1
                 continue
@@ -222,7 +220,6 @@ def get_latest_balance():
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
-                raise ccxt.RequestTimeout
             else:
                 n += 1
                 continue
@@ -569,7 +566,6 @@ def post_order(symbol, signal_type, quantity):
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
-                raise ccxt.RequestTimeout
                 """Plan to add an error report SMS function here"""
             else:
                 n += 1
