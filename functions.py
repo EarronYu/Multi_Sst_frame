@@ -7,7 +7,7 @@ import json
 import time
 import h5py
 import sys
-from numpy import nan as NaN
+from twilio.rest import Client
 
 pd.set_option('display.max_rows', 1000)
 pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
@@ -30,15 +30,33 @@ default_reduce_rate = data['default_reduce_rate']
 pin = data['pin']
 test_info = data['test_info']
 binance_order_types = data['binance_order_types']
-TESTNET_BINANCE_CONFIG = data['TESTNET_BINANCE_CONFIG']
+BINANCE_CONFIG = data['BINANCE_CONFIG']
+from_number = data['From_Number']
+to_number = data['To_Number']
+twilio_key = data['twilio_key']
+twilio_tkn = data['twilio_token']
 Max_atp = int(data['maximum_number_of_attempts'])
-exchange = ccxt.binance(TESTNET_BINANCE_CONFIG)
-exchange.set_sandbox_mode(True)
+exchange = ccxt.binance(BINANCE_CONFIG)
+# exchange.set_sandbox_mode(True)
 # 变量
 strategy_list = ['']
 strategy_symbol_list = ['']
 strategy_symbol_time_period_list = ['']
 reduce_rate_list = ['']
+
+
+# 获取当前时间并格式化显示方式：
+def send_message(msg):
+    send_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    account_sid = twilio_key
+    auth_token = twilio_tkn
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(to=to_number, from_=from_number, body=f"{msg}")
+    print('Send SMS to Number：'+message.to)
+    print('Send Time：%s \nSent Successfully' % send_time)
+    print('Message：\n'+message.body)
+    print('SMS SID：' + message.sid)
+    send_message()
 
 
 def load_config(strategy, symbol, time_period):
@@ -146,6 +164,8 @@ def usdt_future_exchange_info(symbol):
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
+                msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
+                send_message(msg)
             else:
                 n += 1
                 continue
@@ -169,6 +189,8 @@ def get_ticker_price(symbol):
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
+                msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
+                send_message(msg)
             else:
                 n += 1
                 continue
@@ -220,6 +242,8 @@ def get_latest_balance():
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
+                msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
+                send_message(msg)
             else:
                 n += 1
                 continue
@@ -566,7 +590,8 @@ def post_order(symbol, signal_type, quantity):
             time.sleep(1)
             if n >= Max_atp:
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
-                """Plan to add an error report SMS function here"""
+                msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
+                send_message(msg)
             else:
                 n += 1
                 continue
@@ -575,10 +600,13 @@ def post_order(symbol, signal_type, quantity):
     avgPrice = order['avgPrice']
     executedQty = order['executedQty']
     rec01 = f'{status} Order : # {orderId} #'
+    signal_type.replace('_', ' ')
     rec02 = f'{signal_type} Position {executedQty} at {avgPrice}'
     print('Order_Info'.center(120))
     print(f'{rec01}'.center(120))
     print(f' {rec02}'.center(120))
+    msg = rec01 + rec02
+    send_message(msg)
     return order
 
 

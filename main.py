@@ -111,8 +111,6 @@ def reset_time():
     target_time = time_now + datetime.timedelta(minutes=4)
     target_time = target_time.replace(second=0, microsecond=0)
     scheduler.add_job(reset_time, 'date', run_date=target_time, args=[], misfire_grace_time=10)
-    print('Time Delta Reset')
-    print(f'Next Reset Time_Delta Time：{target_time}')
 
 
 def offset_time():
