@@ -467,6 +467,7 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
     if signal_type == 'reduce_SHORT':
         # 计算出减仓量
         reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
+        reduce_rate = Decimal(reduce_rate[0])
         reduce_quantity = Decimal(reduce_rate * quantity)
         quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
@@ -474,6 +475,7 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
     if signal_type == 'reduce_LONG':
         # 计算出减仓量
         reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
+        reduce_rate = Decimal(reduce_rate[0])
         reduce_quantity = Decimal(reduce_rate * quantity)
         quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
@@ -505,6 +507,7 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         quantity = trading_info.loc[time_period, 'period_LONG_position']
         quantity = modify_order_quantity(quantity_precision, quantity)
         quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        quantity = modify_order_quantity(quantity_precision, quantity)
         if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
@@ -516,6 +519,7 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         quantity = trading_info.loc[time_period, 'period_SHORT_position']
         quantity = modify_order_quantity(price_precision, quantity)
         quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
+        quantity = modify_order_quantity(quantity_precision, quantity)
         if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
