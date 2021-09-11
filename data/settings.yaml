@@ -6,6 +6,7 @@ BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
+From_Number: 1
 TESTNET_BINANCE_CONFIG:
   apiKey: 55b71bb2a26bcbba05f5e9a572c05279bd622b55f74fea9de6477426b90e0cfb
   enableRateLimit: false
@@ -14,6 +15,7 @@ TESTNET_BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
+To_Number: 86
 binance_order_types:
   close_LONG:
     positionSide: LONG
@@ -72,7 +74,5 @@ times:
   long_sleep_time: 6
   medium_sleep_time: 2
   short_sleep_time: 1
-From_Number: +1
-To_Number: +86
-twilio_key:
-twilio_token:
+twilio_key: null
+twilio_token: null

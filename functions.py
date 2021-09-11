@@ -30,14 +30,14 @@ default_reduce_rate = data['default_reduce_rate']
 pin = data['pin']
 test_info = data['test_info']
 binance_order_types = data['binance_order_types']
-BINANCE_CONFIG = data['BINANCE_CONFIG']
+BINANCE_CONFIG = data['TESTNET_BINANCE_CONFIG']
 from_number = data['From_Number']
 to_number = data['To_Number']
 twilio_key = data['twilio_key']
 twilio_tkn = data['twilio_token']
 Max_atp = int(data['maximum_number_of_attempts'])
 exchange = ccxt.binance(BINANCE_CONFIG)
-# exchange.set_sandbox_mode(True)
+exchange.set_sandbox_mode(True)
 # 变量
 strategy_list = ['']
 strategy_symbol_list = ['']
@@ -52,11 +52,10 @@ def send_message(msg):
     auth_token = twilio_tkn
     client = Client(account_sid, auth_token)
     message = client.messages.create(to=to_number, from_=from_number, body=f"{msg}")
-    print('Send SMS to Number：'+message.to)
-    print('Send Time：%s \nSent Successfully' % send_time)
+    print('Sent SMS to Number：'+message.to)
+    # print('Send Time：%s \nSent Successfully' % send_time)
     print('Message：\n'+message.body)
-    print('SMS SID：' + message.sid)
-    send_message()
+    # print('SMS SID：' + message.sid)
 
 
 def load_config(strategy, symbol, time_period):
@@ -85,7 +84,7 @@ def load_config(strategy, symbol, time_period):
             f.close()
 
 
-def check_signal(strategy, symbol, time_period):
+def check_signal(strategy, symbol, time_period, signal_type):
     """
     功能时用于检查每次收到的信号是否在预设文件中，如果没有，则在预设文件中新增，并且在数据库文件中新增对应位置来初始化
     """
@@ -94,52 +93,65 @@ def check_signal(strategy, symbol, time_period):
     info = test_info
     with open(yaml_path, 'w') as f:
         if strategy not in data['strategy_list']:
-            data['strategy_list'].append(strategy)
-            data['strategy_list'] = list(set(data['strategy_list']))
-            if '' in data['strategy_list']:
-                data['strategy_list'].remove('')
-            h = h5py.File(f'data//{strategy}.h5', mode='w')
-            h.close()
+            if 'reduce' in signal_type:
+                result = 'rejected'
+            else:
+                data['strategy_list'].append(strategy)
+                data['strategy_list'] = list(set(data['strategy_list']))
+                if '' in data['strategy_list']:
+                    data['strategy_list'].remove('')
+                h = h5py.File(f'data//{strategy}.h5', mode='w')
+                h.close()
+                result = 'passed'
         if symbol not in data[f'{strategy}_symbol_list']:
-            data[f'{strategy}_symbol_list'].append(symbol)
-            data[f'{strategy}_symbol_list'] = list(set(data[f'{strategy}_symbol_list']))
-            if '' in data[f'{strategy}_symbol_list']:
-                data[f'{strategy}_symbol_list'].remove('')
-            temp_info = info.copy()
-            temp_info['time_period'] = 'none'
-            temp_info = pd.DataFrame(temp_info).astype(str)
-            temp_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a', format='t')
+            if 'reduce' in signal_type:
+                result = 'rejected'
+            else:
+                data[f'{strategy}_symbol_list'].append(symbol)
+                data[f'{strategy}_symbol_list'] = list(set(data[f'{strategy}_symbol_list']))
+                if '' in data[f'{strategy}_symbol_list']:
+                    data[f'{strategy}_symbol_list'].remove('')
+                temp_info = info.copy()
+                temp_info['time_period'] = 'none'
+                temp_info = pd.DataFrame(temp_info).astype(str)
+                temp_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a', format='t')
+                result = 'passed'
             # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
             # print(df_02, strategy, symbol, time_period)
             # print('行号: ', str(sys._getframe().f_lineno))
         if time_period not in data[f'{strategy}_{symbol}_time_period_list']:
-            data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
-            data[f'{strategy}_{symbol}_time_period_list'] = list(set(data[f'{strategy}_{symbol}_time_period_list']))
-            if '' in data[f'{strategy}_{symbol}_time_period_list']:
-                data[f'{strategy}_{symbol}_time_period_list'].remove('')
-            data[f'{strategy}_{symbol}_{time_period}_reduce_rate'] = default_reduce_rate
-            if '' in data[f'{strategy}_{symbol}_{time_period}_reduce_rate']:
-                data[f'{strategy}_{symbol}_{time_period}_reduce_rate'].remove('')
-            df = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            df = pd.DataFrame(df)
-            if 'time_period' in df.columns:
-                df.set_index(['time_period'], inplace=True)
-            info['time_period'] = time_period
-            info['symbol'] = symbol
-            info = pd.DataFrame(info)
-            info.set_index(['time_period'], inplace=True)
-            info = pd.DataFrame(info).astype(str)
-            df = df.append(info)
-            if 'none' in df.index:
-                df = df.drop(['none'])
-            df = df[~df.index.duplicated(keep='first')]
-            df = df.astype(str)
-            df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
-            # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
-            # print(df_02, strategy, symbol, time_period)
-            # print('行号: ', str(sys._getframe().f_lineno))
+            if 'reduce' in signal_type:
+                result = 'rejected'
+            else:
+                data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
+                data[f'{strategy}_{symbol}_time_period_list'] = list(set(data[f'{strategy}_{symbol}_time_period_list']))
+                if '' in data[f'{strategy}_{symbol}_time_period_list']:
+                    data[f'{strategy}_{symbol}_time_period_list'].remove('')
+                data[f'{strategy}_{symbol}_{time_period}_reduce_rate'] = default_reduce_rate
+                if '' in data[f'{strategy}_{symbol}_{time_period}_reduce_rate']:
+                    data[f'{strategy}_{symbol}_{time_period}_reduce_rate'].remove('')
+                df = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+                df = pd.DataFrame(df)
+                if 'time_period' in df.columns:
+                    df.set_index(['time_period'], inplace=True)
+                info['time_period'] = time_period
+                info['symbol'] = symbol
+                info = pd.DataFrame(info)
+                info.set_index(['time_period'], inplace=True)
+                info = pd.DataFrame(info).astype(str)
+                df = df.append(info)
+                if 'none' in df.index:
+                    df = df.drop(['none'])
+                df = df[~df.index.duplicated(keep='first')]
+                df = df.astype(str)
+                df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
+                # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
+                # print(df_02, strategy, symbol, time_period)
+                # print('行号: ', str(sys._getframe().f_lineno))
+                result = 'passed'
         yaml.dump(data, f)
         f.close()
+    return result
 
 
 def schedule_sync():
@@ -481,9 +493,11 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
         # 在数据库文件里编辑
         trading_info.loc[time_period, 'period_LONG_position'] = Decimal(quantity)
     if signal_type == 'open_LONG':
-        trading_info.loc[time_period, 'period_LONG_position'] = Decimal(quantity)
+        orig_quantity = trading_info.loc[time_period, 'period_LONG_position']
+        trading_info.loc[time_period, 'period_LONG_position'] = Decimal(orig_quantity + quantity)
     if signal_type == 'open_SHORT':
-        trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(quantity)
+        orig_quantity = trading_info.loc[time_period, 'period_SHORT_position']
+        trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(orig_quantity + quantity)
     if signal_type == 'close_LONG':
         trading_info.loc[time_period, 'period_LONG_position'] = Decimal(0)
     if signal_type == 'close_SHORT':
@@ -504,24 +518,24 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
     price_precision, quantity_precision = get_precision(symbol)
     latest_price = get_ticker_price(symbol)
     if signal_type == 'reduce_LONG':
-        quantity = trading_info.loc[time_period, 'period_LONG_position']
-        quantity = modify_order_quantity(quantity_precision, quantity)
-        quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
-        quantity = modify_order_quantity(quantity_precision, quantity)
-        if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
-            order = post_order(symbol, signal_type, quantity)
+        reduce_quantity = trading_info.loc[time_period, 'period_LONG_position']
+        reduce_quantity = modify_order_quantity(quantity_precision, reduce_quantity)
+        reduce_quantity = position_management(signal_type, strategy, symbol, time_period, reduce_quantity, trading_info)
+        reduce_quantity = modify_order_quantity(quantity_precision, reduce_quantity)
+        if (reduce_quantity > Decimal(0)) and ((latest_price * reduce_quantity) > 10):
+            order = post_order(symbol, signal_type, reduce_quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
             processing_record(strategy, symbol, time_period, signal_type, order)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
     if signal_type == 'reduce_SHORT':
-        quantity = trading_info.loc[time_period, 'period_SHORT_position']
-        quantity = modify_order_quantity(price_precision, quantity)
-        quantity = position_management(signal_type, strategy, symbol, time_period, quantity, trading_info)
-        quantity = modify_order_quantity(quantity_precision, quantity)
-        if (quantity > Decimal(0)) and ((latest_price * quantity) > 10):
-            order = post_order(symbol, signal_type, quantity)
+        reduce_quantity = trading_info.loc[time_period, 'period_SHORT_position']
+        reduce_quantity = modify_order_quantity(price_precision, reduce_quantity)
+        reduce_quantity = position_management(signal_type, strategy, symbol, time_period, reduce_quantity, trading_info)
+        reduce_quantity = modify_order_quantity(quantity_precision, reduce_quantity)
+        if (reduce_quantity > Decimal(0)) and ((latest_price * reduce_quantity) > 10):
+            order = post_order(symbol, signal_type, reduce_quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
             processing_record(strategy, symbol, time_period, signal_type, order)
         else:
@@ -605,7 +619,7 @@ def post_order(symbol, signal_type, quantity):
     executedQty = order['executedQty']
     rec01 = f'{status} Order : # {orderId} #'
     signal_type.replace('_', ' ')
-    rec02 = f'{signal_type} Position {executedQty} at {avgPrice}'
+    rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
     print('Order_Info'.center(120))
     print(f'{rec01}'.center(120))
     print(f' {rec02}'.center(120))

@@ -39,9 +39,12 @@ def get_token():
 
 def processing_signal(strategy, symbol, time_period, signal_type):
     start = time.time()
-    check_signal(strategy, symbol, time_period)
-    update_allocation_statistics(strategy, symbol, time_period)
-    processing_trading_action(strategy, symbol, time_period, signal_type)
+    result = check_signal(strategy, symbol, time_period, signal_type)
+    if result == 'passed':
+        update_allocation_statistics(strategy, symbol, time_period)
+        processing_trading_action(strategy, symbol, time_period, signal_type)
+    else:
+        print(f'Rejected Signal You did\'t Open Position Named {symbol}'.center(120))
     end = time.time()
     t = end - start
     print(f'Time Cost: {t}'.center(120))
