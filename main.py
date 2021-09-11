@@ -13,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler, BlockingSched
 
 time_delta = 0
 L = 0
+a = 0
 # 建立flask app
 app = Flask(__name__)
 
@@ -38,9 +39,13 @@ def get_token():
 
 
 def processing_signal(strategy, symbol, time_period, signal_type):
+    global a
     start = time.time()
     result = check_signal(strategy, symbol, time_period, signal_type)
     if result == 'passed':
+        while a < 1:
+            scheduler.add_job(schedule_sync, 'cron', month='*', day='*', hour='7, 19', minute='59', args=[], misfire_grace_time=10)
+            a = 2
         update_allocation_statistics(strategy, symbol, time_period)
         processing_trading_action(strategy, symbol, time_period, signal_type)
     else:
@@ -133,7 +138,6 @@ def offset_time():
 scheduler = BackgroundScheduler()
 # scheduler = BlockingScheduler()
 scheduler.add_job(reset_time, 'date', run_date=next_run_time('5m'), args=[], misfire_grace_time=10)
-scheduler.add_job(schedule_sync, 'cron', month='*',  day='*', hour='7, 19', minute='59', args=[], misfire_grace_time=10)
 scheduler.add_job(tradingview_alart, 'cron', month='1-12', day='1st mon', hour='10', args=[], misfire_grace_time=10)
 scheduler.start()
 

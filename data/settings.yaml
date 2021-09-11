@@ -39,6 +39,23 @@ default_reduce_rate:
 - 0.3
 maximum_number_of_attempts: 10
 pin: 23Dot140692632779!
+test_record:
+  order_time:
+  - 'insert_order_time'
+  strategy:
+  - 'insert_strategy'
+  symbol:
+  - 'insert_symbol'
+  time_period:
+  - 'insert_time_period'
+  side:
+  - 'profit_side'
+  Price:
+  - 'best_price'
+  quantity:
+  - 'affordable_quantity'
+  realized_PNL:
+  - '0.000'
 test_info:
   account_balance:
   - '0.000'
