@@ -38,6 +38,32 @@ def get_token():
     return token.hexdigest()
 
 
+def report():
+    with open(yaml_path, 'r') as f:
+        global data
+        data = f.read()
+        data = yaml.load(data, Loader=yaml.FullLoader)
+        f.close()
+        msg_S = ''
+        for S in data['strategy_list']:
+            msg_s = ''
+            for s in data[f'{S}_symbol_list']:
+                df = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
+                df_record = pd.read_hdf(f'data//{S}_trading_record.h5', key=f'{s}', mode='r')
+                df = pd.DataFrame(df).astype(str)
+                df_record = pd.DataFrame(df_record).astype(str)
+                msg_t = ''
+                for t in data[f'{S}_{s}_time_period_list']:
+                    ratio = df.loc[t, 'period_allocated_ratio']
+                    funds = df.loc[t, 'period_allocated_funds']
+                    msg_t = f'timeperiod: {t}\nratio: {ratio}\nfunds: {funds}'
+                    msg_s += msg_t
+                msg_s = f'{S}\n{s}\n{msg_s}'
+                print(msg_s)
+                send_message(msg_s)
+    scheduler.add_job(report, 'interval', hours=2, args=[], misfire_grace_time=10)
+
+
 def processing_signal(strategy, symbol, time_period, signal_type):
     global a
     start = time.time()
@@ -48,8 +74,9 @@ def processing_signal(strategy, symbol, time_period, signal_type):
             a = 2
         update_allocation_statistics(strategy, symbol, time_period)
         processing_trading_action(strategy, symbol, time_period, signal_type)
+        scheduler.add_job(report, 'date', run_date=next_run_time('1h'), args=[], misfire_grace_time=10)
     else:
-        print(f'Rejected Signal You did\'t Open Position Named {symbol}'.center(120))
+        print(f'Rejected Signal You did\'t Open Position Named {symbol} on {time_period}'.center(120))
     end = time.time()
     t = end - start
     print(f'Time Cost: {t}'.center(120))

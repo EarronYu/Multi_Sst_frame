@@ -18,7 +18,6 @@ pd.set_option('display.width', 1000)
 pd.set_option('display.max_colwidth', 1000)
 pd.set_option('mode.chained_assignment', None)
 
-
 # 从配置文件中加载各种配置
 yaml_path = 'data//settings.yaml'
 with open(yaml_path, 'r') as f:
@@ -31,14 +30,14 @@ pin = data['pin']
 test_info = data['test_info']
 test_record = data['test_record']
 binance_order_types = data['binance_order_types']
-BINANCE_CONFIG = data['TESTNET_BINANCE_CONFIG']
+BINANCE_CONFIG = data['BINANCE_CONFIG']
 from_number = data['From_Number']
 to_number = data['To_Number']
 twilio_key = data['twilio_key']
 twilio_tkn = data['twilio_token']
 Max_atp = int(data['maximum_number_of_attempts'])
 exchange = ccxt.binance(BINANCE_CONFIG)
-exchange.set_sandbox_mode(True)
+# exchange.set_sandbox_mode(True)
 # 变量
 strategy_list = ['']
 strategy_symbol_list = ['']
@@ -53,9 +52,9 @@ def send_message(msg):
     auth_token = twilio_tkn
     client = Client(account_sid, auth_token)
     message = client.messages.create(to=to_number, from_=from_number, body=f"{msg}")
-    print('Sent SMS to Number：'+message.to)
+    print('Sent SMS to Number：' + message.to)
     # print('Send Time：%s \nSent Successfully' % send_time)
-    print('Message：\n'+message.body)
+    print('Message：\n' + message.body)
     # print('SMS SID：' + message.sid)
 
 
@@ -66,7 +65,8 @@ def load_config(strategy, symbol, time_period):
         data = f.read()
         data = yaml.load(data, Loader=yaml.FullLoader)
         f.close()
-    if {'strategy_list', f'{strategy}_symbol_list', f'{strategy}_{symbol}_time_period_list', f'{strategy}_{symbol}_{time_period}_reduce_rate'}.issubset(data.keys()):
+    if {'strategy_list', f'{strategy}_symbol_list', f'{strategy}_{symbol}_time_period_list', f'{strategy}_{symbol}_{time_period}_reduce_rate'}.issubset(
+            data.keys()):
         global strategy_list
         strategy_list = data['strategy_list']
         global strategy_symbol_list
@@ -91,12 +91,14 @@ def check_signal(strategy, symbol, time_period, signal_type):
     """
     global data
     info = test_info
+    load_config(strategy, symbol, time_period)
     with open(yaml_path, 'r') as f:
         if ('strategy_list' not in data.keys()) or (strategy not in data['strategy_list']):
             if 'reduce' in signal_type:
+                if data['strategy_list'] == ['']:
+                    del data['strategy_list']
                 result = 'rejected'
             else:
-                load_config(strategy, symbol, time_period)
                 data['strategy_list'].append(strategy)
                 data['strategy_list'] = list(set(data['strategy_list']))
                 if '' in data['strategy_list']:
@@ -109,10 +111,11 @@ def check_signal(strategy, symbol, time_period, signal_type):
         if (f'{strategy}_symbol_list' not in data.keys()) or (symbol not in data[f'{strategy}_symbol_list']):
             if 'reduce' in signal_type:
                 result = 'rejected'
+                if data[f'{strategy}_symbol_list'] == ['']:
+                    del data[f'{strategy}_symbol_list']
             else:
                 temp_record = pd.DataFrame(data['test_record']).astype(str)
                 temp_record.to_hdf(f'data//{strategy}_trading_record.h5', key=f'{symbol}', mode='a', format='t')
-                load_config(strategy, symbol, time_period)
                 data[f'{strategy}_symbol_list'].append(symbol)
                 data[f'{strategy}_symbol_list'] = list(set(data[f'{strategy}_symbol_list']))
                 if '' in data[f'{strategy}_symbol_list']:
@@ -128,8 +131,11 @@ def check_signal(strategy, symbol, time_period, signal_type):
         if (f'{strategy}_{symbol}_time_period_list' not in data.keys()) or (time_period not in data[f'{strategy}_{symbol}_time_period_list']):
             if 'reduce' in signal_type:
                 result = 'rejected'
+                if data[f'{strategy}_{symbol}_time_period_list'] == ['']:
+                    del data[f'{strategy}_{symbol}_time_period_list']
+                if data[f'{strategy}_{symbol}_{time_period}_reduce_rate'] == ['']:
+                    del data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
             else:
-                load_config(strategy, symbol, time_period)
                 data[f'{strategy}_{symbol}_time_period_list'].append(time_period)
                 data[f'{strategy}_{symbol}_time_period_list'] = list(set(data[f'{strategy}_{symbol}_time_period_list']))
                 if '' in data[f'{strategy}_{symbol}_time_period_list']:
@@ -149,13 +155,15 @@ def check_signal(strategy, symbol, time_period, signal_type):
                 df = df.append(info)
                 if 'none' in df.index:
                     df = df.drop(['none'])
-                df = df[~df.index.duplicated(keep='first')]
+                # df = df[~df.index.duplicated(keep='first')]
                 df = df.astype(str)
                 df.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
                 # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
                 # print(df_02, strategy, symbol, time_period)
                 # print('行号: ', str(sys._getframe().f_lineno))
                 result = 'passed'
+        else:
+            result = 'passed'
         f.close()
     with open(yaml_path, 'w') as f:
         yaml.dump(data, f)
@@ -187,6 +195,7 @@ def usdt_future_exchange_info(symbol):
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
                 msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
                 send_message(msg)
+                break
             else:
                 n += 1
                 continue
@@ -212,6 +221,7 @@ def get_ticker_price(symbol):
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
                 msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
                 send_message(msg)
+                break
             else:
                 n += 1
                 continue
@@ -265,6 +275,7 @@ def get_latest_balance():
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
                 msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
                 send_message(msg)
+                break
             else:
                 n += 1
                 continue
@@ -485,32 +496,41 @@ def position_management(signal_type, strategy, symbol, time_period, quantity, tr
     """
     根据订单类型来来得出开仓量, 和更新数据库文件中的对应记录持仓量
     """
+    quantity = Decimal(quantity)
     if signal_type == 'reduce_SHORT':
         # 计算出减仓量
         reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
-        reduce_rate = Decimal(reduce_rate[0])
+        reduce_rate = modify_decimal(reduce_rate[0])
+        # print(reduce_rate, type(reduce_rate))
+        # print(quantity, type(quantity))
         reduce_quantity = Decimal(reduce_rate * quantity)
-        quantity = Decimal(quantity - reduce_quantity)
+        reduced_quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
-        trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(quantity)
+        trading_info.loc[time_period, 'period_SHORT_position'] = modify_decimal(reduced_quantity)
+        quantity = reduce_quantity
     if signal_type == 'reduce_LONG':
         # 计算出减仓量
         reduce_rate = data[f'{strategy}_{symbol}_{time_period}_reduce_rate']
         reduce_rate = Decimal(reduce_rate[0])
         reduce_quantity = Decimal(reduce_rate * quantity)
-        quantity = Decimal(quantity - reduce_quantity)
+        reduced_quantity = Decimal(quantity - reduce_quantity)
         # 在数据库文件里编辑
-        trading_info.loc[time_period, 'period_LONG_position'] = Decimal(quantity)
+        trading_info.loc[time_period, 'period_LONG_position'] = modify_decimal(reduced_quantity)
+        quantity = reduce_quantity
     if signal_type == 'open_LONG':
-        orig_quantity = trading_info.loc[time_period, 'period_LONG_position']
-        trading_info.loc[time_period, 'period_LONG_position'] = Decimal(orig_quantity + quantity)
+        orig_quantity = Decimal(trading_info.loc[time_period, 'period_LONG_position'])
+        orig_quantity = modify_decimal(orig_quantity)
+        trading_info.loc[time_period, 'period_LONG_position'] = modify_decimal(orig_quantity + quantity)
     if signal_type == 'open_SHORT':
         orig_quantity = trading_info.loc[time_period, 'period_SHORT_position']
-        trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(orig_quantity + quantity)
+        orig_quantity = modify_decimal(orig_quantity)
+        trading_info.loc[time_period, 'period_SHORT_position'] = modify_decimal(orig_quantity + quantity)
     if signal_type == 'close_LONG':
-        trading_info.loc[time_period, 'period_LONG_position'] = Decimal(0)
+        quantity = Decimal(trading_info.loc[time_period, 'period_LONG_position'])
+        trading_info.loc[time_period, 'period_LONG_position'] = modify_decimal(0)
     if signal_type == 'close_SHORT':
-        trading_info.loc[time_period, 'period_SHORT_position'] = Decimal(0)
+        quantity = Decimal(trading_info.loc[time_period, 'period_SHORT_position'])
+        trading_info.loc[time_period, 'period_SHORT_position'] = modify_decimal(0)
     trading_info = trading_info.astype(str)
     trading_info.to_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
     return quantity
@@ -538,6 +558,9 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
+            a = 'Order quantity is less than $10 or below the precision!'
+            b = 'Future Position Did Not Adjust Properly!'
+            send_message(f'{a} {b}')
     if signal_type == 'reduce_SHORT':
         reduce_quantity = trading_info.loc[time_period, 'period_SHORT_position']
         # reduce_quantity = modify_order_quantity(price_precision, reduce_quantity)
@@ -550,6 +573,9 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
+            a = 'Order quantity is less than $10 or below the precision!'
+            b = 'Future Position Did Not Adjust Properly!'
+            send_message(f'{a} {b}')
     if signal_type == 'open_LONG':
         reduce_quantity = trading_info.loc[time_period, 'period_SHORT_position']
         reduce_quantity = position_management('close_SHORT', strategy, symbol, time_period, reduce_quantity, trading_info)
@@ -570,6 +596,9 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
+            a = 'Order quantity is less than $10 or below the precision!'
+            b = 'Future Position Did Not Adjust Properly!'
+            send_message(f'{a} {b}')
     if signal_type == 'open_SHORT':
         reduce_quantity = trading_info.loc[time_period, 'period_LONG_position']
         reduce_quantity = position_management('close_LONG', strategy, symbol, time_period, reduce_quantity, trading_info)
@@ -590,6 +619,9 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
+            a = 'Order quantity is less than $10 or below the precision!'
+            b = 'Future Position Did Not Adjust Properly!'
+            send_message(f'{a} {b}')
 
 
 def post_order(symbol, signal_type, quantity):
@@ -619,6 +651,7 @@ def post_order(symbol, signal_type, quantity):
                 print('If you encounter difficulties, just don\'t do it and get a good night\'s sleep'.center(120))
                 msg = 'Emergent Issue Occurred Boss, Please Check the Server!'
                 send_message(msg)
+                break
             else:
                 n += 1
                 continue
@@ -664,7 +697,7 @@ def trading_record(order, strategy, symbol, time_period, signal_type):
     side = signal_type
     order_time = intTodatetime(order_time)
     # record = pd.read_csv('data//trading_record.csv')
-    record = pd.read_hdf('data//trading_record.h5', key=f'{symbol}', mode='a')
+    record = pd.read_hdf(f'data//{strategy}_trading_record.h5', key=f'{symbol}', mode='a')
     record = pd.DataFrame(record).astype(str)
     df = \
         {
@@ -675,26 +708,28 @@ def trading_record(order, strategy, symbol, time_period, signal_type):
             'side': [f'{side}'],
             'Price': [f'{price}'],
             'quantity': [f'{quantity}'],
-            'pnl': ['did\'t_calculated']
+            'realized_PNL': ['did\'t_calculated']
         }
     df = pd.DataFrame(df)
-    df['order_time'] = pd.to_datetime(df['order_time'])
     df = record.append(df)
+    df = df[~df['order_time'].isin(['insert_order_time'])]
+    df['order_time'] = pd.to_datetime(df['order_time'])
     df.sort_values('order_time', inplace=True)
     df = df.astype(str)
     df.to_hdf(f'data//{strategy}_trading_record.h5', key=f'{symbol}', mode='a')
+    # print(df)
 
 
 def processing_record(strategy, symbol, time_period, signal_type, order):
     """
     通过record来计算PNL和allocated_funds
     """
-    df = pd.read_hdf('data//trading_record.h5', key=f'{symbol}', mode='a')
+    df = pd.read_hdf(f'data//{strategy}_trading_record.h5', key=f'{symbol}', mode='a')
     df = pd.DataFrame(df).astype(str)
-    df_selected = df[(df[u'time_period'] == f'{time_period}')]
+    df_selected = df[df['time_period'].isin([f'{time_period}'])]
     df_selected['order_time'] = pd.to_datetime(df_selected['order_time'])
     df_selected.sort_values('order_time', inplace=True)
-    df_unselected = df[(df[u'time_period'] != f'{time_period}')]
+    df_unselected = df[~df['time_period'].isin([f'{time_period}'])]
     if signal_type in ['open_LONG', 'open_SHORT']:
         q = order['executedQty']
         p = order['avgPrice']
@@ -711,7 +746,7 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
         # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
         # print(df_02, strategy, symbol, time_period)
         # print('行号: ', str(sys._getframe().f_lineno))
-        print(df_selected.index[-1])
+        # print(df_selected.tail(1))
         df_selected.loc[df_selected.index[-1], 'realized_PNL'] = Decimal('0.000')
         df = df_unselected.append(df_selected)
         df['order_time'] = pd.to_datetime(df['order_time'])
@@ -723,30 +758,53 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
             trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             trade_info = pd.DataFrame(trade_info).astype(str)
             side = Decimal(1)
-            df_o = df_selected[(df_selected[u'side'] == 'open_SHORT')]
+            df_o = df_selected[df_selected[u'side'].isin(['open_SHORT'])]
             df_o['order_time'] = pd.to_datetime(df_o['order_time'])
             df_o.sort_values('order_time', inplace=True)
-            print(df_o)
+            # print(df_o)
         if signal_type in ['reduce_LONG', 'close_LONG']:
             trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             trade_info = pd.DataFrame(trade_info).astype(str)
             side = Decimal(-1)
-            df_o = df_selected[(df_selected[u'side'] == 'open_LONG')]
+            df_o = df_selected[df_selected[u'side'].isin(['open_LONG'])]
             df_o['order_time'] = pd.to_datetime(df_o['order_time'])
             df_o.sort_values('order_time', inplace=True)
-            print(df_o)
+            # print(df_o)
         if len(df_selected.index) >= 2:
             n_record = df_selected.tail(1)
             o_record = df_o.tail(1)
-            n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price']) * Decimal(0.9996)
-            o_funds = Decimal(n_record['quantity']) * Decimal(o_record['Price'])
+            n_funds = n_record['quantity'].apply(Decimal) * n_record['Price'].apply(Decimal) * Decimal(0.9996)
+            o_funds = n_record['quantity'].apply(Decimal) * o_record['Price'].apply(Decimal)
             pnl = (n_funds - o_funds) * side
+            # print(pnl, type(pnl))
+            pnl = Decimal(pnl.iloc[-1])
+            p = trade_info.loc[f'{time_period}', 'profit_trades']
+            p = Decimal(p)
+            gp = trade_info.loc[f'{time_period}', 'gross_profit']
+            gp = Decimal(gp)
+            l = trade_info.loc[f'{time_period}', 'loss_trades']
+            l = Decimal(l)
+            gl = trade_info.loc[f'{time_period}', 'gross_loss']
+            gl = Decimal(gl)
+            if pnl >= 0:
+                p += 1
+                gp += pnl
+                trade_info.loc[f'{time_period}', 'profit_trades'] = p
+                trade_info.loc[f'{time_period}', 'gross_profit'] = gp
+            else:
+                l += 1
+                gl += pnl
+                trade_info.loc[f'{time_period}', 'loss_trades'] = l
+                trade_info.loc[f'{time_period}', 'gross_loss'] = gl
+            if (p+l) != 0 and gl != 0:
+                trade_info.loc[f'{time_period}', 'profit_factor'] = Decimal(p/(p+l))
+                trade_info.loc[f'{time_period}', 'profit_loss_ratio'] = Decimal(gp/abs(gl))
             n = trade_info.loc[f'{time_period}', 'period_allocated_funds']
             n = modify_decimal(n)
             n = n + pnl
             trade_info.loc[f'{time_period}', 'period_allocated_funds'] = Decimal(n)
             trade_info = trade_info.astype(str)
-            df_selected.loc[df_selected.index[-1], 'realized_PNL'] = pnl
+            df_selected.iloc[-1, df_selected.columns.get_loc('realized_PNL')] = pnl
             df = df_unselected.append(df_selected)
             df['order_time'] = pd.to_datetime(df['order_time'])
             df.sort_values('order_time', inplace=True)
@@ -760,7 +818,7 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
             trade_info = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='a')
             trade_info = pd.DataFrame(trade_info).astype(str)
             n_record = df_selected.tail(1)
-            n_funds = Decimal(n_record['quantity']) * Decimal(n_record['Price'])
+            n_funds = n_record['quantity'].apply(Decimal) * n_record['Price'].apply(Decimal)
             o_funds = trade_info.loc[f'{time_period}', 'period_allocated_funds']
             o_funds = modify_decimal(o_funds)
             funds = o_funds - n_funds * Decimal('0.0004')
@@ -771,11 +829,9 @@ def processing_record(strategy, symbol, time_period, signal_type, order):
             # df_02 = pd.read_hdf(f'data//{strategy}.h5', key=f'{symbol}', mode='r')
             # print(df_02, strategy, symbol, time_period)
             # print('行号: ', str(sys._getframe().f_lineno))
-            df_selected.loc[df_selected.index[-1], 'realized_PNL'] = Decimal('0.000')
+            df_selected.iloc[-1, df_selected.columns.get_loc('realized_PNL')] = Decimal('0.000')
             df = df_unselected.append(df_selected)
             df['order_time'] = pd.to_datetime(df['order_time'])
             df.sort_values('order_time', inplace=True)
             df = df.astype(str)
             df.to_hdf(f'data//{strategy}_trading_record.h5', key=f'{symbol}', mode='a')
-
-
