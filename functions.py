@@ -52,9 +52,9 @@ def send_message(msg):
     auth_token = twilio_tkn
     client = Client(account_sid, auth_token)
     message = client.messages.create(to=to_number, from_=from_number, body=f"{msg}")
-    print('Sent SMS to Number：' + message.to)
+    # print('Sent SMS to Number：' + message.to)
     # print('Send Time：%s \nSent Successfully' % send_time)
-    print('Message：\n' + message.body)
+    # print('Message：\n' + message.body)
     # print('SMS SID：' + message.sid)
 
 
@@ -555,6 +555,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
             order = post_order(symbol, signal_type, reduce_quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
             processing_record(strategy, symbol, time_period, signal_type, order)
+            status = order['status']
+            orderId = order['orderId']
+            avgPrice = order['avgPrice']
+            executedQty = order['executedQty']
+            rec01 = f'{status} Order : # {orderId} #'
+            rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
+            msg = rec01 + rec02
+            send_message(msg)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
@@ -570,6 +578,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
             order = post_order(symbol, signal_type, reduce_quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
             processing_record(strategy, symbol, time_period, signal_type, order)
+            status = order['status']
+            orderId = order['orderId']
+            avgPrice = order['avgPrice']
+            executedQty = order['executedQty']
+            rec01 = f'{status} Order : # {orderId} #'
+            rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
+            msg = rec01 + rec02
+            send_message(msg)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
@@ -584,6 +600,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
             order = post_order(symbol, 'close_SHORT', reduce_quantity)
             trading_record(order, strategy, symbol, time_period, 'close_SHORT')
             processing_record(strategy, symbol, time_period, 'close_SHORT', order)
+            status = order['status']
+            orderId = order['orderId']
+            avgPrice = order['avgPrice']
+            executedQty = order['executedQty']
+            rec01 = f'{status} Order : # {orderId} #'
+            rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
+            msg = rec01 + rec02
+            send_message(msg)
         n = trading_info.loc[time_period, 'period_allocated_funds']
         allocated_funds = modify_decimal(n)
         quantity = allocated_funds / latest_price
@@ -593,6 +617,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
             processing_record(strategy, symbol, time_period, signal_type, order)
+            status = order['status']
+            orderId = order['orderId']
+            avgPrice = order['avgPrice']
+            executedQty = order['executedQty']
+            rec01 = f'{status} Order : # {orderId} #'
+            rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
+            msg = rec01 + rec02
+            send_message(msg)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
@@ -607,6 +639,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
             order = post_order(symbol, 'close_LONG', reduce_quantity)
             trading_record(order, strategy, symbol, time_period, 'close_LONG')
             processing_record(strategy, symbol, time_period, 'close_LONG', order)
+            status = order['status']
+            orderId = order['orderId']
+            avgPrice = order['avgPrice']
+            executedQty = order['executedQty']
+            rec01 = f'{status} Order : # {orderId} #'
+            rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
+            msg = rec01 + rec02
+            send_message(msg)
         n = trading_info.loc[time_period, 'period_allocated_funds']
         allocated_funds = modify_decimal(n)
         quantity = allocated_funds / latest_price
@@ -616,6 +656,14 @@ def processing_trading_action(strategy, symbol, time_period, signal_type):
             order = post_order(symbol, signal_type, quantity)
             trading_record(order, strategy, symbol, time_period, signal_type)
             processing_record(strategy, symbol, time_period, signal_type, order)
+            status = order['status']
+            orderId = order['orderId']
+            avgPrice = order['avgPrice']
+            executedQty = order['executedQty']
+            rec01 = f'{status} Order : # {orderId} #'
+            rec02 = f'{symbol}: {signal_type} Position {executedQty} at {avgPrice}'
+            msg = rec01 + rec02
+            send_message(msg)
         else:
             print('Order quantity is less than $10 or below the precision!'.center(120))
             print('Future Position Did Not Adjust Properly!'.center(120))
@@ -665,8 +713,6 @@ def post_order(symbol, signal_type, quantity):
     print('Order_Info'.center(120))
     print(f'{rec01}'.center(120))
     print(f' {rec02}'.center(120))
-    msg = rec01 + rec02
-    send_message(msg)
     return order
 
 

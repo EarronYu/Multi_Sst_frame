@@ -45,23 +45,24 @@ def report():
         data = yaml.load(data, Loader=yaml.FullLoader)
         f.close()
         msg_S = ''
+        S = ''
         for S in data['strategy_list']:
             msg_s = ''
+            s = ''
             for s in data[f'{S}_symbol_list']:
                 df = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
                 df_record = pd.read_hdf(f'data//{S}_trading_record.h5', key=f'{s}', mode='r')
                 df = pd.DataFrame(df).astype(str)
                 df_record = pd.DataFrame(df_record).astype(str)
                 msg_t = ''
+                t = ''
                 for t in data[f'{S}_{s}_time_period_list']:
                     ratio = df.loc[t, 'period_allocated_ratio']
                     funds = df.loc[t, 'period_allocated_funds']
-                    msg_t = f'timeperiod: {t}\nratio: {ratio}\nfunds: {funds}'
+                    msg_t = f'\ntimeperiod: {t}\nratio: {ratio}\nfunds: {funds}'
                     msg_s += msg_t
                 msg_s = f'{S}\n{s}\n{msg_s}'
-                print(msg_s)
-                send_message(msg_s)
-    scheduler.add_job(report, 'interval', hours=2, args=[], misfire_grace_time=10)
+            send_message(msg_s)
 
 
 def processing_signal(strategy, symbol, time_period, signal_type):
@@ -69,12 +70,13 @@ def processing_signal(strategy, symbol, time_period, signal_type):
     start = time.time()
     result = check_signal(strategy, symbol, time_period, signal_type)
     if result == 'passed':
-        while a < 1:
+        if a < 1:
+            global a
             scheduler.add_job(schedule_sync, 'cron', month='*', day='*', hour='7, 19', minute='59', args=[], misfire_grace_time=10)
-            a = 2
+            scheduler.add_job(report, 'cron', month='*', day='*', hour='7, 9, 11, 13, 15, 17, 19, 21, 23', minute='59', args=[], misfire_grace_time=10)
+            a += 2
         update_allocation_statistics(strategy, symbol, time_period)
         processing_trading_action(strategy, symbol, time_period, signal_type)
-        scheduler.add_job(report, 'date', run_date=next_run_time('1h'), args=[], misfire_grace_time=10)
     else:
         print(f'Rejected Signal You did\'t Open Position Named {symbol} on {time_period}'.center(120))
     end = time.time()
@@ -182,6 +184,7 @@ def webhook():
         if get_token() == data['key']:  # 如果get_token返回来的值等于data数据容器中的'key', 向下执行
             strategy = data["strategy"]
             symbol = data["symbol"]
+            symbol = symbol[:-4]
             time_period = data["time_period"]
             signal_type = data["signal_type"]
             if 'remove' in (strategy + symbol + time_period):
