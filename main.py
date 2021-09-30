@@ -48,22 +48,31 @@ def report():
         S = ''
         for S in data['strategy_list']:
             msg_s = ''
+            msg_Ss = ''
             s = ''
             for s in data[f'{S}_symbol_list']:
                 df = pd.read_hdf(f'data//{S}.h5', key=f'{s}', mode='r')
                 df_record = pd.read_hdf(f'data//{S}_trading_record.h5', key=f'{s}', mode='r')
                 df = pd.DataFrame(df).astype(str)
                 df_record = pd.DataFrame(df_record).astype(str)
-                msg_t = ''
+                msg_st = ''
                 t = ''
                 for t in data[f'{S}_{s}_time_period_list']:
                     ratio = df.loc[t, 'period_allocated_ratio']
                     funds = df.loc[t, 'period_allocated_funds']
-                    msg_t = f'\ntimeperiod: {t}\nratio: {ratio}\nfunds: {funds}'
-                    msg_s += msg_t
-                msg_s = f'{S}\n{s}\n{msg_s}'
-            send_message(msg_s)
-
+                    position_SHORT = Decimal(df.loc[t, 'period_SHORT_position'])
+                    position_LONG = Decimal(df.loc[t, 'period_LONG_position'])
+                    if position_LONG - position_SHORT > 0:
+                        side = 'LONG'
+                    else:
+                        side = 'SHORT'
+                    position = position_LONG + position_SHORT
+                    msg_t = f'Timeperiod: {t}\nRatio: {ratio}\nFunds: {funds}\n{side}_position: {position}\n'
+                    msg_st += msg_t
+                    msg_s = f'{s}\n{msg_st}\n'
+                msg_Ss += msg_s
+            msg_S = f'{S}\n{msg_Ss}'
+            send_message(msg_S)
 
 def processing_signal(strategy, symbol, time_period, signal_type):
     global a
