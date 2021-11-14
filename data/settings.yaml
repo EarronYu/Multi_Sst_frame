@@ -6,6 +6,7 @@ BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
+From_Number: 1
 TESTNET_BINANCE_CONFIG:
   apiKey: 55b71bb2a26bcbba05f5e9a572c05279bd622b55f74fea9de6477426b90e0cfb
   enableRateLimit: false
@@ -14,7 +15,14 @@ TESTNET_BINANCE_CONFIG:
   secret: b07d12b5ac6c23b0ff7536106eae8cfb05a4f2b40dd767460fc54232705b5e3b
   timeout: 5000
   verbose: false
+To_Number: 1
 binance_order_types:
+  close_LONG:
+    positionSide: LONG
+    side: SELL
+  close_SHORT:
+    positionSide: SHORT
+    side: BUY
   open_LONG:
     positionSide: LONG
     side: BUY
@@ -29,7 +37,8 @@ binance_order_types:
     side: BUY
 default_reduce_rate:
 - 0.3
-pin: 23Dot140692632779!
+maximum_number_of_attempts: 10
+pin: 2
 test_info:
   account_balance:
   - '0.000'
@@ -61,8 +70,30 @@ test_info:
   - insert_time_period
   total_yield:
   - '0.000'
+test_record:
+  Price:
+  - best_price
+  order_time:
+  - insert_order_time
+  quantity:
+  - affordable_quantity
+  realized_PNL:
+  - '0.000'
+  side:
+  - profit_side
+  strategy:
+  - insert_strategy
+  symbol:
+  - insert_symbol
+  time_period:
+  - insert_time_period
 times:
   long_sleep_time: 6
   medium_sleep_time: 2
   short_sleep_time: 1
+<<<<<<< HEAD
 maximum_number_of_attempts: 10
+=======
+twilio_key: A
+twilio_token: e
+>>>>>>> e2ad7aab304996f03140cf29da0b3ab842731f35
