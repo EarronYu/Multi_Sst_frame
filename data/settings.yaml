@@ -65,3 +65,4 @@ times:
   long_sleep_time: 6
   medium_sleep_time: 2
   short_sleep_time: 1
+maximum_number_of_attempts: 10
